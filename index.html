@@ -25,6 +25,34 @@
             animation: fadeIn 0.5s ease-out forwards;
         }
 
+        /* --- Toast Animations --- */
+        @keyframes toast-in {
+            from {
+                transform: translateX(100%);
+                opacity: 0;
+            }
+            to {
+                transform: translateX(0);
+                opacity: 1;
+            }
+        }
+        @keyframes toast-out {
+            from {
+                opacity: 1;
+            }
+            to {
+                opacity: 0;
+                transform: scale(0.95);
+            }
+        }
+        .toast-in {
+            animation: toast-in 0.5s cubic-bezier(0.215, 0.610, 0.355, 1.000) forwards;
+        }
+        .toast-out {
+            animation: toast-out 0.5s ease-in forwards;
+        }
+
+
         /* --- Custom Radio Toggle --- */
         .radio-toggle-label {
             cursor: pointer;
@@ -140,12 +168,9 @@
 
         <!-- Main Content -->
         <main class="max-w-7xl mx-auto p-4 sm:p-6 lg:p-8">
-            <!-- Message Bar -->
-            <div id="message-bar" class="hidden mb-6 p-4 rounded-lg text-center font-medium"></div>
-
-            <div class="grid grid-cols-1 lg:grid-cols-2 gap-8 items-start">
+            <div class="grid grid-cols-1 gap-8">
                 
-                <!-- LEFT COLUMN: INPUTS -->
+                <!-- INPUTS SECTION -->
                 <div class="space-y-6">
                     <!-- Question Card -->
                     <div class="modern-card p-6 rounded-xl shadow-lg fade-in" style="animation-delay: 0.1s;">
@@ -223,8 +248,8 @@
                     </div>
                 </div>
 
-                <!-- RIGHT COLUMN: OUTPUT -->
-                <div class="lg:sticky lg:top-24">
+                <!-- OUTPUT SECTION -->
+                <div>
                     <div class="modern-card p-6 rounded-xl shadow-lg min-h-[600px] fade-in" style="animation-delay: 0.5s;">
                         <h2 class="text-xl font-semibold mb-4 flex items-center gap-3 text-slate-700">
                              <svg class="w-6 h-6 text-blue-600" xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 8V4H8"/><rect width="16" height="12" x="4" y="8" rx="2"/><path d="M2 14h2"/><path d="M20 14h2"/><path d="M15 13v2"/><path d="M9 13v2"/></svg>
@@ -238,6 +263,9 @@
             </div>
         </main>
     </div>
+    
+    <!-- Toast Notification Container -->
+    <div id="toast-container" class="fixed bottom-4 right-4 z-50 w-full max-w-xs space-y-3"></div>
 
 <script>
     // --- IMPORTANT: ADD YOUR API KEY HERE ---
@@ -380,12 +408,11 @@
     const GEMINI_API_URL = "https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-preview-05-20:generateContent";
 
     // DOM Elements
-    let messageBar, questionTextarea, questionFileInput, answerTextarea, answerFileInput, answerFilesContainer, evaluateBtn, generateBtn, outputContainer, modelAnswerCard, modelAnswerEditor, modelAnswerFileInput, evaluationTypeRadios;
+    let questionTextarea, questionFileInput, answerTextarea, answerFileInput, answerFilesContainer, evaluateBtn, generateBtn, outputContainer, modelAnswerCard, modelAnswerEditor, modelAnswerFileInput, evaluationTypeRadios;
 
     // --- EVENT LISTENERS ---
     document.addEventListener('DOMContentLoaded', () => {
         // Initialize DOM elements after the DOM is fully loaded
-        messageBar = document.getElementById('message-bar');
         questionTextarea = document.getElementById('question-textarea');
         questionFileInput = document.getElementById('question-file-input');
         answerTextarea = document.getElementById('answer-textarea');
@@ -433,17 +460,44 @@
 
 
     // --- STATE MANAGEMENT & UI UPDATE ---
-    function updateMessage(newMessage, isError = false) {
-        state.message = newMessage;
-        if (messageBar) {
-            if (state.message) {
-                messageBar.textContent = state.message;
-                messageBar.className = `mb-6 p-4 rounded-lg text-center font-medium transition-all duration-300 ${isError ? 'bg-red-100 text-red-800' : 'bg-blue-100 text-blue-800'}`;
-                messageBar.style.display = 'block';
-            } else {
-                messageBar.style.display = 'none';
-            }
+    function updateMessage(message, isError = false, duration = 4000) {
+        // Update state for loader panel
+        state.message = message;
+        
+        // Don't show an empty toast
+        if (!message) return;
+
+        const toastContainer = document.getElementById('toast-container');
+        if (!toastContainer) {
+            console.error('Toast container not found!');
+            return;
         }
+
+        const toast = document.createElement('div');
+        
+        const baseClasses = 'p-4 rounded-xl shadow-lg flex items-center gap-3 text-sm font-medium w-full';
+        const typeClasses = isError 
+            ? 'bg-red-500 text-white' 
+            : 'bg-white text-slate-800 border border-slate-200';
+        
+        toast.className = `${baseClasses} ${typeClasses} toast-in`;
+
+        const icon = isError 
+            ? `<svg class="w-6 h-6 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>`
+            : `<svg class="w-6 h-6 flex-shrink-0 text-blue-500" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>`;
+        
+        toast.innerHTML = `${icon}<span>${message}</span>`;
+        
+        toastContainer.appendChild(toast);
+
+        setTimeout(() => {
+            toast.classList.remove('toast-in');
+            toast.classList.add('toast-out');
+            
+            toast.addEventListener('animationend', () => {
+                toast.remove();
+            });
+        }, duration);
     }
     
     function setLoading(key, value) {
@@ -454,7 +508,7 @@
     function updateUI() {
         if (!questionTextarea) return; // Guard against running before DOM is ready
 
-        updateMessage(state.message, state.message.includes('Error'));
+        // No need to call updateMessage here, it's called when actions happen
         questionTextarea.value = state.questionText;
         answerTextarea.value = state.answerText;
         if (modelAnswerEditor && document.activeElement !== modelAnswerEditor) {
@@ -524,14 +578,23 @@
         } else if (state.evaluationResult) {
             const result = state.evaluationResult;
             let bodyHtml = (result.body_paragraphs_evaluation || []).map((para, index) => `
-                <div key="${index}" class="pl-4 border-l-2 border-slate-300">
-                    <p class="font-semibold text-slate-600">Paragraph ${index + 1}:</p>
-                    <div class="prose prose-sm max-w-none space-y-2 mt-1">
-                        <div><strong>Argument Analysis:</strong> <span>${renderMarkdown(para.argument_analysis)}</span></div>
-                        <div><strong>Content & Evidence:</strong> <span>${renderMarkdown(para.content_and_evidence)}</span></div>
-                        <div><strong>Structure & Flow:</strong> <span>${renderMarkdown(para.structure_and_flow)}</span></div>
+                <div class="pt-4">
+                    <h5 class="font-semibold text-slate-700">Paragraph ${index + 1}:</h5>
+                    <div class="prose prose-sm max-w-none text-slate-600 mt-2 space-y-3">
+                        <div>
+                            <p class="font-semibold text-slate-600">Argument Analysis:</p>
+                            ${renderMarkdown(para.argument_analysis)}
+                        </div>
+                        <div>
+                            <p class="font-semibold text-slate-600">Content & Evidence:</p>
+                            ${renderMarkdown(para.content_and_evidence)}
+                        </div>
+                        <div>
+                            <p class="font-semibold text-slate-600">Structure & Flow:</p>
+                            ${renderMarkdown(para.structure_and_flow)}
+                        </div>
                     </div>
-                </div>`).join('');
+                </div>`).join('<hr class="my-4 border-slate-200">');
 
             outputContainer.innerHTML = `
                 <div class="space-y-6">
@@ -543,22 +606,40 @@
                         <h3 class="text-xl font-semibold text-slate-800 border-b pb-2">Detailed Evaluation</h3>
                         <div class="bg-slate-50 p-4 rounded-lg">
                             <h4 class="font-semibold text-slate-700 mb-2">A. Introduction Evaluation</h4>
-                            <div class="prose prose-sm max-w-none space-y-2">
-                                <div><strong>Strengths:</strong> <span>${renderMarkdown(result.introduction_evaluation?.strengths)}</span></div>
-                                <div><strong>Weaknesses & Counterpoints:</strong> <span>${renderMarkdown(result.introduction_evaluation?.weaknesses)}</span></div>
-                                <div><strong>Suggestions for Improvement:</strong> <span>${renderMarkdown(result.introduction_evaluation?.suggestions)}</span></div>
+                            <div class="prose prose-sm max-w-none text-slate-600 space-y-3">
+                                <div>
+                                    <p class="font-semibold text-slate-600">Strengths:</p>
+                                    ${renderMarkdown(result.introduction_evaluation?.strengths)}
+                                </div>
+                                <div>
+                                    <p class="font-semibold text-slate-600">Weaknesses & Counterpoints:</p>
+                                    ${renderMarkdown(result.introduction_evaluation?.weaknesses)}
+                                </div>
+                                <div>
+                                    <p class="font-semibold text-slate-600">Suggestions for Improvement:</p>
+                                    ${renderMarkdown(result.introduction_evaluation?.suggestions)}
+                                </div>
                             </div>
                         </div>
                         <div class="bg-slate-50 p-4 rounded-lg">
                             <h4 class="font-semibold text-slate-700 mb-2">B. Body Paragraphs Evaluation</h4>
-                            <div class="space-y-4">${bodyHtml}</div>
+                            ${bodyHtml}
                         </div>
                         <div class="bg-slate-50 p-4 rounded-lg">
                             <h4 class="font-semibold text-slate-700 mb-2">C. Conclusion Evaluation</h4>
-                            <div class="prose prose-sm max-w-none space-y-2">
-                                <div><strong>Strengths:</strong> <span>${renderMarkdown(result.conclusion_evaluation?.strengths)}</span></div>
-                                <div><strong>Weaknesses:</strong> <span>${renderMarkdown(result.conclusion_evaluation?.weaknesses)}</span></div>
-                                <div><strong>Suggestions for Improvement:</strong> <span>${renderMarkdown(result.conclusion_evaluation?.suggestions)}</span></div>
+                            <div class="prose prose-sm max-w-none text-slate-600 space-y-3">
+                                <div>
+                                    <p class="font-semibold text-slate-600">Strengths:</p>
+                                    ${renderMarkdown(result.conclusion_evaluation?.strengths)}
+                                </div>
+                                <div>
+                                    <p class="font-semibold text-slate-600">Weaknesses:</p>
+                                    ${renderMarkdown(result.conclusion_evaluation?.weaknesses)}
+                                </div>
+                                <div>
+                                    <p class="font-semibold text-slate-600">Suggestions for Improvement:</p>
+                                    ${renderMarkdown(result.conclusion_evaluation?.suggestions)}
+                                </div>
                             </div>
                         </div>
                     </div>
@@ -799,7 +880,7 @@
             * **Maximum Marks:** ${inferredMaxMarks}
 
             **Output Requirement:**
-            Provide your final evaluation **ONLY** in the specified JSON format below. Populate the fields based on your SOP-guided analysis.
+            Provide your final evaluation **ONLY** in the specified JSON format below. **Use markdown bullet points (* or -) for all lists of feedback to ensure clear, point-wise presentation.** Populate the fields based on your SOP-guided analysis.
         `;
 
         payloadParts.push({ text: prompt });
@@ -874,7 +955,7 @@
             * **Maximum Marks:** ${inferredMaxMarks}
 
             **Your Feedback Report:**
-            Please provide your evaluation **ONLY** in the following JSON format. Frame your feedback in a conversational and mentor-like tone.
+            Please provide your evaluation **ONLY** in the following JSON format. Frame your feedback in a conversational and mentor-like tone. **Use markdown bullet points (* or -) within each field to break down your feedback into clear, actionable points.**
             1.  "score": A score based on how closely my answer matches the model answer's quality, content, and structure.
             2.  "maxMarks": The maximum marks.
             3.  "introduction_evaluation": An object with:
