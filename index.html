@@ -5,10 +5,8 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>UPSC Answer Evaluator</title>
     
-    <!-- Tailwind CSS for styling -->
     <script src="https://cdn.tailwindcss.com"></script>
     
-    <!-- Google Fonts & Custom Styles -->
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
         body { 
@@ -157,7 +155,6 @@
 <body class=" text-slate-800">
 
     <div id="app">
-        <!-- Header -->
         <header class="bg-white/80 shadow-sm sticky top-0 z-10 backdrop-blur-md border-b border-slate-200">
             <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4 flex justify-between items-center">
                 <h1 class="text-2xl font-bold text-slate-800 flex items-center gap-2">
@@ -171,13 +168,10 @@
             </div>
         </header>
 
-        <!-- Main Content -->
         <main class="max-w-7xl mx-auto p-4 sm:p-6 lg:p-8">
             <div class="grid grid-cols-1 gap-8">
                 
-                <!-- INPUTS SECTION -->
                 <div class="space-y-6">
-                    <!-- Question Card -->
                     <div class="modern-card p-6 rounded-xl shadow-lg fade-in" style="animation-delay: 0.1s;">
                         <h2 class="text-xl font-semibold mb-4 flex items-center gap-3 text-slate-700">
                             <svg class="w-6 h-6 text-blue-600" xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7Z"/><path d="M14 2v4a2 2 0 0 0 2 2h4"/><path d="M10 9H8"/><path d="M16 13H8"/><path d="M16 17H8"/></svg>
@@ -192,7 +186,6 @@
                         </div>
                     </div>
                     
-                    <!-- Evaluation Type Card -->
                     <div class="modern-card p-6 rounded-xl shadow-lg fade-in" style="animation-delay: 0.2s;">
                         <h2 class="text-xl font-semibold mb-4 flex items-center gap-3 text-slate-700">Evaluation Method</h2>
                         <div class="relative flex items-center bg-slate-200/70 p-1 rounded-full radio-toggle">
@@ -206,7 +199,6 @@
                         </div>
                     </div>
 
-                    <!-- Model Answer Card (hidden by default) -->
                     <div id="model-answer-card" class="modern-card p-6 rounded-xl shadow-lg hidden">
                         <h2 class="text-xl font-semibold mb-4 flex items-center gap-3 text-slate-700">
                             <svg class="w-6 h-6 text-blue-600" xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7Z"/><path d="M14 2v4a2 2 0 0 0 2 2h4"/><path d="M10 9H8"/><path d="M16 13H8"/><path d="M16 17H8"/></svg>
@@ -224,7 +216,6 @@
                          <p class="text-xs text-slate-500 mt-2">For text-based PDFs, paste content directly for best results. For image-based PDFs, upload will only OCR the first page.</p>
                     </div>
 
-                    <!-- Your Answer Card -->
                     <div class="modern-card p-6 rounded-xl shadow-lg fade-in" style="animation-delay: 0.3s;">
                         <h2 class="text-xl font-semibold mb-4 flex items-center gap-3 text-slate-700">
                             <svg class="w-6 h-6 text-blue-600" xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7Z"/><path d="M14 2v4a2 2 0 0 0 2 2h4"/><path d="M10 9H8"/><path d="M16 13H8"/><path d="M16 17H8"/></svg>
@@ -240,7 +231,6 @@
                         <div id="answer-files-container" class="mt-4 space-y-2"></div>
                     </div>
                     
-                    <!-- Action Buttons -->
                     <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 fade-in" style="animation-delay: 0.4s;">
                         <button id="evaluate-btn" onclick="evaluateAnswer()" class="w-full flex items-center justify-center gap-2 px-4 py-3 bg-blue-600 text-white font-semibold rounded-lg shadow-lg hover:bg-blue-700 disabled:bg-slate-400 disabled:cursor-not-allowed transition-all duration-300 transform hover:scale-105 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500">
                             <svg class="w-5 h-5" xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect width="8" height="4" x="8" y="2" rx="1" ry="1"/><path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2"/><path d="m9 14 2 2 4-4"/></svg>
@@ -253,7 +243,6 @@
                     </div>
                 </div>
 
-                <!-- OUTPUT SECTION -->
                 <div>
                     <div class="modern-card p-6 rounded-xl shadow-lg min-h-[600px] fade-in" style="animation-delay: 0.5s;">
                         <h2 class="text-xl font-semibold mb-4 flex items-center gap-3 text-slate-700">
@@ -261,15 +250,13 @@
                              Evaluation Hub
                         </h2>
                         <div id="output-container">
-                            <!-- Content is dynamically generated by JavaScript -->
-                        </div>
+                            </div>
                     </div>
                 </div>
             </div>
         </main>
     </div>
     
-    <!-- Toast Notification Container -->
     <div id="toast-container" class="fixed bottom-4 right-4 z-50 w-full max-w-xs space-y-3"></div>
 
 <script>
@@ -664,7 +651,7 @@
         } else {
              outputContainer.innerHTML = `
                 <div class="flex flex-col items-center justify-center h-96 text-center">
-                    <svg class="w-16 h-16 text-slate-300" xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 8V4H8"/><rect width="16" height="12" x="4" y="8" rx="2"/><path d="M2 14h2"/><path d="M20 14h2"/><path d="M15 13v2"/><path d="M9 13v2"/></svg>
+                    <svg class="w-16 h-16 text-slate-300" xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 8V4H8"/><rect width="16" height="12" x="4" y="8" rx="2"/><path d="M2 14h2"/><path d="M20 14h2"/><path d="M15 13v2"/><path d="M9 13v2"/></svg>
                     <p class="mt-4 text-slate-600">Your evaluation report will appear here.</p>
                     <p class="text-sm text-slate-500">Enter a question and answer, then click "Evaluate".</p>
                 </div>`;
@@ -760,13 +747,25 @@
 
     // --- Helper to infer word limit and max marks ---
     const getInferredLimits = (questionText) => {
+        // Default values
         let inferredMaxMarks = 10;
         let inferredWordLimit = '150 words';
-        // Updated to check for Hindi word for "250 words"
-        if (questionText.toLowerCase().includes('250 words') || questionText.includes('२५० शब्दों')) {
+
+        const lowerCaseText = questionText.toLowerCase();
+        const hindiText = questionText; // No need to lowercase Hindi for this check
+
+        // Check for 250 words first, as it's the higher value
+        if (lowerCaseText.includes('250 words') || hindiText.includes('२५० शब्दों')) {
             inferredMaxMarks = 15;
             inferredWordLimit = '250 words';
+        } 
+        // Explicitly check for 150 words
+        else if (lowerCaseText.includes('150 words') || hindiText.includes('१५० शब्दों')) {
+            inferredMaxMarks = 10;
+            inferredWordLimit = '150 words';
         }
+        
+        // If neither is mentioned, the default values (10 marks, 150 words) will be used.
         return { inferredMaxMarks, inferredWordLimit };
     };
 
@@ -1167,5 +1166,3 @@
 
 </body>
 </html>
-
-
