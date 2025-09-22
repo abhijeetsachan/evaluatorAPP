@@ -4,17 +4,35 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>UPSC Answer Evaluator</title>
-    
     <script src="https://cdn.tailwindcss.com"></script>
-    
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
         body { 
             font-family: 'Inter', sans-serif; 
-            background-color: #f0f4f8; /* A lighter, more modern slate */
+            background-color: #f0f4f8;
+            scroll-behavior: smooth;
         }
-
-        /* --- Animations --- */
+        .modern-card { 
+            background-color: rgba(255, 255, 255, 0.9); 
+            backdrop-filter: blur(10px); 
+            border: 1px solid rgba(226, 232, 240, 0.7);
+            transition: all 0.3s ease;
+        }
+        .loader { 
+            width: 48px; 
+            height: 48px; 
+            border-radius: 50%; 
+            display: inline-block; 
+            position: relative; 
+            border: 3px solid; 
+            border-color: #3b82f6 #3b82f6 transparent transparent; 
+            box-sizing: border-box; 
+            animation: rotation 1s linear infinite; 
+        }
+        @keyframes rotation { 
+            0% { transform: rotate(0deg); } 
+            100% { transform: rotate(360deg); } 
+        }
         @keyframes fadeIn {
             from { opacity: 0; transform: translateY(10px); }
             to { opacity: 1; transform: translateY(0); }
@@ -22,357 +40,251 @@
         .fade-in {
             animation: fadeIn 0.5s ease-out forwards;
         }
-
-        /* --- Toast Animations --- */
-        @keyframes toast-in {
-            from { transform: translateX(100%); opacity: 0; }
-            to { transform: translateX(0); opacity: 1; }
-        }
-        @keyframes toast-out {
-            from { opacity: 1; }
-            to { opacity: 0; transform: scale(0.95); }
-        }
-        .toast-in { animation: toast-in 0.5s cubic-bezier(0.215, 0.610, 0.355, 1.000) forwards; }
-        .toast-out { animation: toast-out 0.5s ease-in forwards; }
-
-        /* --- Custom Radio Toggle --- */
-        .radio-toggle-label { cursor: pointer; position: relative; padding: 0.5rem 1rem; transition: color 0.3s ease-in-out; color: #475569; z-index: 1; }
-        .radio-toggle input[type="radio"] { display: none; }
-        .radio-toggle-bg { position: absolute; top: 4px; left: 4px; width: calc(50% - 4px); height: calc(100% - 8px); background-color: #3b82f6; border-radius: 9999px; box-shadow: 0 4px 10px -2px rgb(59 130 246 / 0.4); transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1); z-index: 0; }
-        .radio-toggle input[id="model-eval"]:checked ~ .radio-toggle-bg { transform: translateX(calc(100% + 4px)); }
-        .radio-toggle input[type="radio"]:checked + label { color: white; }
-        
-        /* --- ContentEditable Placeholder --- */
-        [contenteditable]:empty:before { content: attr(data-placeholder); color: #94a3b8; pointer-events: none; display: block; }
-
-        /* --- Modern Card Style --- */
-        .modern-card { background-color: rgba(255, 255, 255, 0.8); backdrop-filter: blur(10px); border: 1px solid rgba(255, 255, 255, 0.2); }
-        
-        /* --- New Loader Animation --- */
-        .loader { width: 48px; height: 48px; border-radius: 50%; display: inline-block; position: relative; border: 3px solid; border-color: #3b82f6 #3b82f6 transparent transparent; box-sizing: border-box; animation: rotation 1s linear infinite; }
-        .loader::after,
-        .loader::before { content: ''; box-sizing: border-box; position: absolute; left: 0; right: 0; top: 0; bottom: 0; margin: auto; border: 3px solid; border-color: transparent transparent #4f46e5 #4f46e5; width: 40px; height: 40px; border-radius: 50%; box-sizing: border-box; animation: rotationBack 0.5s linear infinite; transform-origin: center center; }
-        .loader::before { width: 32px; height: 32px; border-color: #3b82f6 #3b82f6 transparent transparent; animation: rotation 1.5s linear infinite; }
-            
-        @keyframes rotation { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } } 
-        @keyframes rotationBack { 0% { transform: rotate(0deg); } 100% { transform: rotate(-360deg); } }
     </style>
 </head>
+<body class="text-slate-800">
 
-<body class=" text-slate-800">
-
-    <div id="app">
-        <header class="bg-white/80 shadow-sm sticky top-0 z-10 backdrop-blur-md border-b border-slate-200">
+    <div id="app" class="max-w-7xl mx-auto p-4 sm:p-6 lg:p-8">
+        
+        <header class="bg-white/80 shadow-sm sticky top-0 z-20 backdrop-blur-md border-b border-slate-200 mb-8 rounded-xl">
             <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4 flex justify-between items-center">
-                <h1 class="text-2xl font-bold text-slate-800 flex items-center gap-2">
-                    <svg class="w-7 h-7 text-blue-600" xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22h6a2 2 0 0 0 2-2V7l-5-5H6a2 2 0 0 0-2 2v3"/><path d="M14 2v4a2 2 0 0 0 2 2h4"/><path d="m3 12.5 1.5 1.5 3-3"/><path d="m3 17.5 1.5 1.5 3-3"/></svg>
+                <h1 class="text-2xl font-bold text-slate-800 flex items-center gap-3">
+                    <svg class="w-7 h-7 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
                     <span>UPSC Answer Evaluator</span>
                 </h1>
-                <button onclick="clearAll()" class="flex items-center gap-2 text-sm font-medium text-slate-600 hover:text-blue-600 transition-all duration-300 transform hover:scale-105">
-                    <svg class="w-4 h-4" xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6h18"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6"/><path d="M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/><line x1="10" x2="10" y1="11" y2="17"/><line x1="14" x2="14" y1="11" y2="17"/></svg>
-                    Clear All
-                </button>
+                <button onclick="clearAll()" class="text-sm font-medium text-slate-600 hover:text-blue-600 transition-colors">Clear All</button>
             </div>
         </header>
 
-        <main class="max-w-7xl mx-auto p-4 sm:p-6 lg:p-8">
-            <div class="grid grid-cols-1 gap-8">
+        <main class="grid grid-cols-1 lg:grid-cols-2 gap-8">
+            <div class="space-y-6">
                 
-                <div class="space-y-6">
-                    <div class="modern-card p-6 rounded-xl shadow-lg fade-in" style="animation-delay: 0.1s;">
-                        <h2 class="text-xl font-semibold mb-4 flex items-center gap-3 text-slate-700">
-                           1. UPSC Question
-                        </h2>
-                        <div class="relative">
-                            <textarea id="question-textarea" class="w-full p-3 pr-12 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 transition duration-200 min-h-[150px] text-base bg-slate-50/50" placeholder="Paste question text here, or upload an image..."></textarea>
-                            <label class="absolute top-2 right-2 p-2 rounded-full hover:bg-slate-200 cursor-pointer transition-all duration-200 transform hover:scale-110">
-                                <svg class="w-5 h-5 text-slate-500" xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 14.899A7 7 0 1 1 15.71 8h1.79a4.5 4.5 0 0 1 2.5 8.242"/><path d="M12 12v9"/><path d="m16 16-4-4-4 4"/></svg>
-                                <input id="question-file-input" type="file" accept="image/*,application/pdf" class="hidden" />
-                            </label>
-                        </div>
-                    </div>
-                    
-                    <div class="modern-card p-6 rounded-xl shadow-lg fade-in" style="animation-delay: 0.2s;">
-                        <h2 class="text-xl font-semibold mb-4 flex items-center gap-3 text-slate-700">2. Preferred Evaluation Method</h2>
-                        <div class="relative flex items-center bg-slate-200/70 p-1 rounded-full radio-toggle">
-                            <input type="radio" name="evaluationType" id="ai-eval" value="ai" checked>
-                            <label for="ai-eval" class="radio-toggle-label w-1/2 text-center">AI Evaluation</label>
-                            
-                            <input type="radio" name="evaluationType" id="model-eval" value="model">
-                            <label for="model-eval" class="radio-toggle-label w-1/2 text-center">Model Answer</label>
-                            
-                            <div class="radio-toggle-bg"></div>
-                        </div>
-                    </div>
-
-                    <div id="model-answer-card" class="modern-card p-6 rounded-xl shadow-lg hidden">
-                        <h2 class="text-xl font-semibold mb-4 flex items-center gap-3 text-slate-700">
-                           (Optional) Model Answer
-                        </h2>
-                        <div class="relative">
-                             <div id="model-answer-editor" contenteditable="true" 
-                                  class="w-full p-3 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 transition duration-200 min-h-[150px] text-base bg-slate-50/50 overflow-y-auto" 
-                                  data-placeholder="Paste formatted model answer here, or upload an image/PDF..."></div>
-                            <label class="absolute top-2 right-2 p-2 rounded-full hover:bg-slate-200 cursor-pointer transition-all duration-200 transform hover:scale-110">
-                                <svg class="w-5 h-5 text-slate-500" xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 14.899A7 7 0 1 1 15.71 8h1.79a4.5 4.5 0 0 1 2.5 8.242"/><path d="M12 12v9"/><path d="m16 16-4-4-4 4"/></svg>
-                                <input id="model-answer-file-input" type="file" accept="image/*,application/pdf" class="hidden" />
-                            </label>
-                        </div>
-                         <p class="text-xs text-slate-500 mt-2">For text-based PDFs, paste content directly. For image-based PDFs, upload will OCR the first page.</p>
-                    </div>
-
-                    <div class="modern-card p-6 rounded-xl shadow-lg fade-in" style="animation-delay: 0.3s;">
-                        <h2 class="text-xl font-semibold mb-4 flex items-center gap-3 text-slate-700">
-                            3. Your Answer
-                        </h2>
-                        <div class="relative">
-                            <textarea id="answer-textarea" class="w-full p-3 pr-12 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 transition duration-200 min-h-[120px] text-base bg-slate-50/50" placeholder="Paste answer text here, or upload images..."></textarea>
-                            <label class="absolute top-2 right-2 p-2 rounded-full hover:bg-slate-200 cursor-pointer transition-all duration-200 transform hover:scale-110">
-                                <svg class="w-5 h-5 text-slate-500" xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 14.899A7 7 0 1 1 15.71 8h1.79a4.5 4.5 0 0 1 2.5 8.242"/><path d="M12 12v9"/><path d="m16 16-4-4-4 4"/></svg>
-                                <input id="answer-file-input" type="file" accept="image/*" multiple class="hidden" />
-                            </label>
-                        </div>
-                        <div id="answer-files-container" class="mt-4 space-y-2"></div>
-                    </div>
-                    
-                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 fade-in" style="animation-delay: 0.4s;">
-                        <button id="evaluate-btn" onclick="evaluateAnswer()" class="w-full flex items-center justify-center gap-2 px-4 py-3 bg-blue-600 text-white font-semibold rounded-lg shadow-lg hover:bg-blue-700 disabled:bg-slate-400 disabled:cursor-not-allowed transition-all duration-300 transform hover:scale-105 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500">
-                            Evaluate Answer
-                        </button>
-                        <button id="generate-btn" onclick="generateFullModelAnswer()" class="w-full flex items-center justify-center gap-2 px-4 py-3 bg-slate-700 text-white font-semibold rounded-lg shadow-lg hover:bg-slate-800 disabled:bg-slate-400 disabled:cursor-not-allowed transition-all duration-300 transform hover:scale-105 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-slate-500">
-                             Generate Model Answer
-                        </button>
+                <div class="modern-card p-6 rounded-xl shadow-lg fade-in">
+                    <h2 class="text-xl font-semibold mb-4 text-slate-700">1. The Question</h2>
+                    <div class="relative">
+                        <textarea id="question-textarea" class="w-full p-3 border border-slate-300 rounded-lg min-h-[120px] bg-slate-50/50 focus:ring-2 focus:ring-blue-500 transition" placeholder="Paste the UPSC question here..."></textarea>
                     </div>
                 </div>
 
-                <div>
-                    <div class="modern-card p-6 rounded-xl shadow-lg min-h-[600px] fade-in" style="animation-delay: 0.5s;">
-                        <h2 class="text-xl font-semibold mb-4 flex items-center gap-3 text-slate-700">
-                             Evaluation / Model Answer Panel
-                        </h2>
-                        <div id="output-container">
-                            </div>
+                <div class="modern-card p-6 rounded-xl shadow-lg fade-in" style="animation-delay: 100ms;">
+                    <h2 class="text-xl font-semibold mb-4 text-slate-700">2. Your Answer</h2>
+                    <div class="relative">
+                        <textarea id="answer-textarea" class="w-full p-3 border border-slate-300 rounded-lg min-h-[180px] bg-slate-50/50 focus:ring-2 focus:ring-blue-500 transition" placeholder="Paste your answer text here, or upload images of your handwritten answer below..."></textarea>
                     </div>
+                    <div class="mt-4">
+                        <label class="cursor-pointer text-sm text-blue-600 hover:text-blue-700 font-semibold transition-colors">
+                            + Upload Images (Handwritten Answer)
+                            <input id="answer-file-input" type="file" accept="image/*" multiple class="hidden" />
+                        </label>
+                    </div>
+                    <div id="answer-files-container" class="mt-4 space-y-2"></div>
+                </div>
+
+                <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 fade-in" style="animation-delay: 200ms;">
+                    <button id="evaluate-btn" onclick="evaluateAnswer()" class="w-full flex items-center justify-center gap-2 px-4 py-3 bg-blue-600 text-white font-semibold rounded-lg shadow-lg hover:bg-blue-700 disabled:bg-slate-400 disabled:cursor-not-allowed transition-all transform hover:scale-105">
+                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+                        Evaluate Answer
+                    </button>
+                     <button id="generate-btn" onclick="generateFullModelAnswer()" class="w-full flex items-center justify-center gap-2 px-4 py-3 bg-slate-700 text-white font-semibold rounded-lg shadow-lg hover:bg-slate-800 disabled:bg-slate-400 disabled:cursor-not-allowed transition-all transform hover:scale-105">
+                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 3v4M3 5h4M4 17v4M2 19h4M17 3v4M15 5h4M17 17v4M15 19h4"></path></svg>
+                        Generate Model Answer
+                    </button>
+                </div>
+            </div>
+
+            <div class="sticky top-28 h-full">
+                <div id="output-section" class="modern-card p-6 rounded-xl shadow-lg min-h-[500px] max-h-[80vh] overflow-y-auto">
+                    <h2 class="text-xl font-semibold mb-4 text-slate-700">Evaluation Panel</h2>
+                    <div id="output-container"></div>
                 </div>
             </div>
         </main>
     </div>
-    
-    <div id="toast-container" class="fixed bottom-4 right-4 z-50 w-full max-w-xs space-y-3"></div>
 
+    <div id="toast-container" class="fixed bottom-4 right-4 z-50 w-full max-w-xs space-y-3"></div>
 <script>
-    // --- IMPORTANT: This front-end code requires the Node.js backend server (server.js) to be running. ---
-    
-    // --- GLOBAL STATE & DOM REFERENCES ---
+    // --- STATE MANAGEMENT & DOM REFERENCES ---
     let state = {
         questionText: '',
         answerText: '',
-        modelAnswerText: '',
-        answerFiles: [], // will be an array of { id, file }
-        loadingState: { ocrQuestion: false, ocrModelAnswer: false, evaluate: false, fullAnswer: false },
-        generatedModelAnswer: '',
+        answerFiles: [],
+        loadingState: {},
         evaluationResult: null,
-        message: '',
-        evaluationType: 'ai', // 'ai' or 'model'
+        generatedModelAnswer: null,
+        message: ''
     };
-    
-    const PROXY_API_URL = '/api/proxy'; // All requests go through our own backend
+    let questionTextarea, answerTextarea, answerFileInput, answerFilesContainer, evaluateBtn, generateBtn, outputContainer, outputSection;
 
-    // DOM Elements
-    let questionTextarea, questionFileInput, answerTextarea, answerFileInput, answerFilesContainer, evaluateBtn, generateBtn, outputContainer, modelAnswerCard, modelAnswerEditor, modelAnswerFileInput, evaluationTypeRadios;
-
-    // --- EVENT LISTENERS ---
+    // --- INITIALIZATION ---
     document.addEventListener('DOMContentLoaded', () => {
+        // Assign DOM elements
         questionTextarea = document.getElementById('question-textarea');
-        questionFileInput = document.getElementById('question-file-input');
         answerTextarea = document.getElementById('answer-textarea');
         answerFileInput = document.getElementById('answer-file-input');
         answerFilesContainer = document.getElementById('answer-files-container');
         evaluateBtn = document.getElementById('evaluate-btn');
         generateBtn = document.getElementById('generate-btn');
         outputContainer = document.getElementById('output-container');
-        modelAnswerCard = document.getElementById('model-answer-card');
-        modelAnswerEditor = document.getElementById('model-answer-editor');
-        modelAnswerFileInput = document.getElementById('model-answer-file-input');
-        evaluationTypeRadios = document.querySelectorAll('input[name="evaluationType"]');
-
-        questionTextarea.addEventListener('input', (e) => { state.questionText = e.target.value; updateButtons(); });
-        answerTextarea.addEventListener('input', (e) => { state.answerText = e.target.value; updateButtons(); });
-        modelAnswerEditor.addEventListener('input', (e) => { state.modelAnswerText = e.target.innerText; updateButtons(); });
-
-        questionFileInput.addEventListener('change', (e) => handleFileUpload(e, 'question'));
-        answerFileInput.addEventListener('change', handleAnswerImageUpload);
-        modelAnswerFileInput.addEventListener('change', (e) => handleFileUpload(e, 'modelAnswer'));
+        outputSection = document.getElementById('output-section');
         
-        evaluationTypeRadios.forEach(radio => {
-            radio.addEventListener('change', (e) => { state.evaluationType = e.target.value; updateUI(); });
-        });
-
+        // Attach event listeners
+        questionTextarea.addEventListener('input', e => { state.questionText = e.target.value; updateButtons(); });
+        answerTextarea.addEventListener('input', e => { state.answerText = e.target.value; updateButtons(); });
+        answerFileInput.addEventListener('change', handleAnswerImageUpload);
+        
         updateUI(); // Initial render
     });
 
-    // --- STATE MANAGEMENT & UI UPDATE ---
-    function updateMessage(message, isError = false, duration = 4000) {
+    // --- UI & STATE UPDATERS ---
+    function updateMessage(message, isError = false) {
         state.message = message;
-        if (Object.values(state.loadingState).some(Boolean)) { renderOutput(); }
+        if (Object.values(state.loadingState).some(Boolean)) renderOutput();
         if (!message) return;
 
         const toastContainer = document.getElementById('toast-container');
-        if (!toastContainer) return;
-
         const toast = document.createElement('div');
-        const baseClasses = 'p-4 rounded-xl shadow-lg flex items-center gap-3 text-sm font-medium w-full';
-        const typeClasses = isError ? 'bg-red-500 text-white' : 'bg-white text-slate-800 border border-slate-200';
-        toast.className = `${baseClasses} ${typeClasses} toast-in`;
-        
-        toast.innerHTML = `<span>${message}</span>`;
+        toast.className = `p-4 rounded-xl shadow-lg text-sm font-medium ${isError ? 'bg-red-500 text-white' : 'bg-white text-slate-800'}`;
+        toast.textContent = message;
         toastContainer.appendChild(toast);
-
-        setTimeout(() => {
-            toast.classList.remove('toast-in');
-            toast.classList.add('toast-out');
-            toast.addEventListener('animationend', () => toast.remove());
-        }, duration);
+        setTimeout(() => toast.remove(), 4000);
     }
-    
+
     function setLoading(key, value) {
         state.loadingState[key] = value;
         updateUI();
     }
 
     function updateUI() {
-        if (!questionTextarea) return; 
-
-        questionTextarea.value = state.questionText;
-        answerTextarea.value = state.answerText;
-        if (modelAnswerEditor && document.activeElement !== modelAnswerEditor) { modelAnswerEditor.innerText = state.modelAnswerText; }
-        answerTextarea.readOnly = state.answerFiles.length > 0;
-
-        if (modelAnswerCard) {
-            modelAnswerCard.classList.toggle('hidden', state.evaluationType !== 'model');
-            if (state.evaluationType === 'model') modelAnswerCard.classList.add('fade-in');
-        }
-        
+        if (!questionTextarea) return;
         renderAnswerFiles();
         renderOutput();
         updateButtons();
     }
 
     function updateButtons() {
-        if (!evaluateBtn) return;
         const isAnyLoading = Object.values(state.loadingState).some(Boolean);
-        let isEvaluateDisabled = isAnyLoading || !state.questionText.trim() || (!state.answerText.trim() && state.answerFiles.length === 0);
-        if (state.evaluationType === 'model' && !state.modelAnswerText.trim()) {
-            isEvaluateDisabled = true;
-        }
-        evaluateBtn.disabled = isEvaluateDisabled;
+        const canEvaluate = state.questionText.trim() && (state.answerText.trim() || state.answerFiles.length > 0);
+        evaluateBtn.disabled = isAnyLoading || !canEvaluate;
         generateBtn.disabled = isAnyLoading || !state.questionText.trim();
     }
 
+    // --- RENDERING FUNCTIONS ---
     function renderAnswerFiles() {
         if (!answerFilesContainer) return;
         answerFilesContainer.innerHTML = '';
         state.answerFiles.forEach(item => {
             const fileDiv = document.createElement('div');
-            fileDiv.className = "flex items-center justify-between bg-slate-100 p-2 rounded-md text-sm";
-            fileDiv.innerHTML = `<span class="truncate">${item.file.name}</span><button onclick="removeAnswerFile('${item.id}')" class="text-slate-500 hover:text-red-600 p-1">&times;</button>`;
+            fileDiv.className = "flex items-center justify-between bg-slate-100 p-2 rounded-md text-sm fade-in";
+            fileDiv.innerHTML = `<span class="truncate pr-2">${item.file.name}</span><button onclick="removeAnswerFile('${item.id}')" class="text-red-500 font-bold px-2 rounded-full hover:bg-red-100 transition-colors">&times;</button>`;
             answerFilesContainer.appendChild(fileDiv);
         });
     }
 
-    function removeAnswerFile(id) {
-        state.answerFiles = state.answerFiles.filter(f => f.id !== id);
-        updateUI();
-    }
-
     function renderOutput() {
         if (!outputContainer) return;
-        const isAnyLoading = Object.values(state.loadingState).some(Boolean);
+        const isLoading = Object.values(state.loadingState).some(Boolean);
 
-        if (isAnyLoading) {
-            outputContainer.innerHTML = `<div class="flex flex-col items-center justify-center h-96"><span class="loader"></span><p class="mt-4 text-slate-600 font-medium">${state.message || 'Processing...'}</p></div>`;
-        } else if (state.evaluationResult) {
-            const result = state.evaluationResult;
-            const feedback = result.detailed_feedback;
-            const assessment = result.overall_assessment;
+        if (isLoading) {
+            outputContainer.innerHTML = `<div class="flex flex-col items-center justify-center h-96"><span class="loader"></span><p class="mt-4 font-medium text-slate-600">${state.message}</p></div>`;
+            return;
+        }
 
-            const renderList = (items) => !items || items.length === 0 ? '<p class="text-slate-500">None provided.</p>' : `<ul class="list-disc pl-5 space-y-1">${items.map(item => `<li class="text-slate-600">${item}</li>`).join('')}</ul>`;
+        if (state.evaluationResult) {
+            const { score, maxMarks, detailed_feedback: feedback, overall_assessment: assessment } = state.evaluationResult;
+            const renderList = items => !items || items.length === 0 ? '<p class="text-slate-500 italic text-sm">N/A</p>' : `<ul class="list-disc pl-5 space-y-1 text-slate-700">${items.map(item => `<li>${item}</li>`).join('')}</ul>`;
             
-            let bodyHtml = (feedback.body_evaluation || []).map(section => `
-                <div class="pt-4">
-                    <h5 class="font-semibold text-slate-700">${section.section_title}</h5>
-                    <div class="prose prose-sm max-w-none text-slate-600 mt-2 space-y-3 pl-4 border-l-2 border-slate-200">
-                        <div><p class="font-semibold text-slate-600">Strengths:</p>${renderMarkdown(section.evaluation.strengths)}</div>
-                        <div><p class="font-semibold text-slate-600">Weaknesses:</p>${renderMarkdown(section.evaluation.weaknesses)}</div>
-                        ${(section.subsections || []).map(sub => `
-                            <div class="mt-3 pt-3 border-t border-slate-200">
-                                <h6 class="font-semibold text-slate-600">${sub.subsection_title}</h6>
-                                <div class="pl-4">
-                                    <p class="font-medium text-slate-500 mt-1">Strengths:</p>${renderMarkdown(sub.evaluation.strengths)}
-                                    <p class="font-medium text-slate-500 mt-1">Weaknesses:</p>${renderMarkdown(sub.evaluation.weaknesses)}
-                                    <p class="font-medium text-slate-500 mt-1">Suggestions:</p>${renderList(sub.evaluation.suggestions_for_improvement)}
-                                </div>
-                            </div>`).join('')}
-                    </div>
-                </div>`).join('<hr class="my-4 border-slate-200">');
-
             outputContainer.innerHTML = `
-                <div class="space-y-6">
-                    <div class="text-center bg-slate-100 p-4 rounded-lg"><h3 class="text-sm font-medium text-slate-600">Score</h3><p class="text-4xl font-bold text-blue-600 mt-1">${result.score} / ${result.maxMarks}</p></div>
-                    <div class="space-y-4">
-                        <h3 class="text-xl font-semibold text-slate-800 border-b pb-2">Detailed Feedback</h3>
-                        <div class="bg-slate-50 p-4 rounded-lg"><h4 class="font-semibold text-slate-700 mb-2">A. Introduction</h4><div class="prose prose-sm max-w-none text-slate-600 space-y-3"><div><p class="font-semibold">Strengths:</p>${renderMarkdown(feedback.introduction.strengths)}</div><div><p class="font-semibold">Weaknesses:</p>${renderMarkdown(feedback.introduction.weaknesses)}</div><div><p class="font-semibold">Suggestions:</p>${renderList(feedback.introduction.suggestions_for_improvement)}</div></div></div>
-                        <div class="bg-slate-50 p-4 rounded-lg"><h4 class="font-semibold text-slate-700 mb-2">B. Body Evaluation</h4>${bodyHtml}</div>
-                        <div class="bg-slate-50 p-4 rounded-lg"><h4 class="font-semibold text-slate-700 mb-2">C. Conclusion</h4><div class="prose prose-sm max-w-none text-slate-600 space-y-3"><div><p class="font-semibold">Strengths:</p>${renderMarkdown(feedback.conclusion.strengths)}</div><div><p class="font-semibold">Weaknesses:</p>${renderMarkdown(feedback.conclusion.weaknesses)}</div><div><p class="font-semibold">Suggestions:</p>${renderList(feedback.conclusion.suggestions_for_improvement)}</div></div></div>
+                <div class="space-y-6 prose prose-sm max-w-none">
+                    <div class="text-center bg-slate-100 p-4 rounded-lg not-prose">
+                        <h3 class="text-sm font-medium text-slate-600">SCORE</h3>
+                        <p class="text-5xl font-bold text-blue-600 tracking-tight">${score}<span class="text-3xl text-slate-400 font-medium">/${maxMarks}</span></p>
                     </div>
+
                     <div>
-                        <h3 class="text-xl font-semibold text-slate-800 border-b pb-2">Overall Assessment</h3>
-                        <div class="bg-slate-50 p-4 rounded-lg mt-4 space-y-4">
-                             <div><h4 class="font-semibold text-slate-700 mb-2">Presentation & Style:</h4><div class="prose prose-sm max-w-none">${renderMarkdown(assessment.presentation_and_style)}</div></div>
-                             <div><h4 class="font-semibold text-slate-700 mb-2">Holistic Strengths:</h4>${renderList(assessment.holistic_strengths)}</div>
-                             <div><h4 class="font-semibold text-slate-700 mb-2">Priority Areas for Improvement:</h4>${renderList(assessment.priority_areas_for_improvement)}</div>
+                        <h3 class="font-semibold text-slate-800 border-b pb-2 mb-3">Overall Assessment</h3>
+                        <div class="space-y-4">
+                            <div><h4 class="font-semibold">Presentation & Style:</h4>${renderMarkdown(assessment.presentation_and_style)}</div>
+                            <div><h4 class="font-semibold">Holistic Strengths:</h4>${renderList(assessment.holistic_strengths)}</div>
+                            <div><h4 class="font-semibold">Priority Areas for Improvement:</h4>${renderList(assessment.priority_areas_for_improvement)}</div>
+                        </div>
+                    </div>
+                    <hr/>
+                    <div>
+                        <h3 class="font-semibold text-slate-800 border-b pb-2 mb-3">Detailed Feedback</h3>
+                        <div class="space-y-4">
+                            <div class="bg-slate-50 p-4 rounded-lg">
+                                <h4 class="font-semibold">Introduction</h4>
+                                <div class="mt-2 space-y-2">
+                                    <div><strong>Strengths:</strong>${renderMarkdown(feedback.introduction.strengths)}</div>
+                                    <div><strong>Weaknesses:</strong>${renderMarkdown(feedback.introduction.weaknesses)}</div>
+                                    <div><strong>Suggestions:</strong>${renderList(feedback.introduction.suggestions_for_improvement)}</div>
+                                </div>
+                            </div>
+                            <div class="bg-slate-50 p-4 rounded-lg">
+                                <h4 class="font-semibold">Body Paragraphs</h4>
+                                ${feedback.body_evaluation.map(s => `
+                                    <div class="mt-3 pt-3 border-t">
+                                        <h5 class="font-semibold">${s.section_title}</h5>
+                                        <div class="mt-2 space-y-2">
+                                            <div><strong>Strengths:</strong>${renderMarkdown(s.evaluation.strengths)}</div>
+                                            <div><strong>Weaknesses:</strong>${renderMarkdown(s.evaluation.weaknesses)}</div>
+                                        </div>
+                                    </div>`).join('') || '<p>No body paragraphs were evaluated.</p>'}
+                            </div>
+                            <div class="bg-slate-50 p-4 rounded-lg">
+                                <h4 class="font-semibold">Conclusion</h4>
+                                <div class="mt-2 space-y-2">
+                                    <div><strong>Strengths:</strong>${renderMarkdown(feedback.conclusion.strengths)}</div>
+                                    <div><strong>Weaknesses:</strong>${renderMarkdown(feedback.conclusion.weaknesses)}</div>
+                                    <div><strong>Suggestions:</strong>${renderList(feedback.conclusion.suggestions_for_improvement)}</div>
+                                </div>
+                            </div>
                         </div>
                     </div>
                 </div>`;
         } else if (state.generatedModelAnswer) {
-             outputContainer.innerHTML = `<div class="space-y-4"><div><h3 class="text-lg font-semibold text-slate-700 mb-2">Model Answer:</h3><div class="prose prose-sm max-w-none">${renderMarkdown(state.generatedModelAnswer)}</div></div></div>`;
+             outputContainer.innerHTML = `<div class="prose prose-sm max-w-none"><h3>Model Answer</h3>${renderMarkdown(state.generatedModelAnswer)}</div>`;
         } else {
-             outputContainer.innerHTML = `<div class="flex flex-col items-center justify-center h-96 text-center"><svg class="w-16 h-16 text-slate-300" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 8V4H8"/><rect width="16" height="12" x="4" y="8" rx="2"/><path d="M2 14h2"/><path d="M20 14h2"/><path d="M15 13v2"/><path d="M9 13v2"/></svg><p class="mt-4 text-slate-600">Your evaluation report will appear here.</p></div>`;
+            outputContainer.innerHTML = `<div class="text-center text-slate-500 pt-16 h-96 flex flex-col items-center justify-center"><svg class="w-16 h-16 text-slate-300" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 13h6m-3-3v6m5 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path></svg><p class="mt-4">Your evaluation report will appear here.</p></div>`;
         }
     }
 
-    // --- Custom Markdown rendering function ---
     function renderMarkdown(text) {
-        if (!text) return '';
-        text = text.replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>').replace(/\*(.*?)\*/g, '<em>$1</em>');
-        return text.split('\n').map(line => {
-            line = line.trim();
-            if (line.startsWith('- ') || line.startsWith('* ')) {
-                return `<ul class="list-disc pl-5"><li>${line.substring(2)}</li></ul>`;
-            }
-            return line ? `<p>${line}</p>` : '';
-        }).join('');
-    };
-    
-    // --- Helper for API calls ---
-    const fetchWithRetry = async (url, options, retries = 3) => {
-        for (let i = 0; i < retries; i++) {
-            try {
-                const response = await fetch(url, options);
-                if (!response.ok) {
-                    const errorData = await response.json();
-                    throw new Error(errorData.error || `API error: ${response.status}`);
+        if (!text || text.trim().toLowerCase() === 'n/a' || text.trim() === '') return '<p class="text-slate-500 italic text-sm">N/A</p>';
+        
+        let html = text
+            .replace(/</g, "&lt;").replace(/>/g, "&gt;")
+            .replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')
+            .replace(/\*(.*?)\*/g, '<em>$1</em>');
+        
+        let lines = html.split('\n');
+        let processedLines = [], listStack = [];
+        
+        lines.forEach(line => {
+            let trimmed = line.trim();
+            if (trimmed.startsWith('- ') || trimmed.startsWith('* ')) {
+                if (listStack.length === 0) { 
+                    listStack.push('ul'); 
+                    processedLines.push('<ul class="list-disc pl-5 space-y-1 text-slate-700">'); 
                 }
-                return response.json();
-            } catch (error) {
-                if (i === retries - 1) throw error;
-                await new Promise(res => setTimeout(res, 1500));
+                processedLines.push(`<li>${trimmed.substring(2)}</li>`);
+            } else {
+                if (listStack.length > 0) { 
+                    processedLines.push(`</${listStack.pop()}>`); 
+                }
+                if (trimmed) {
+                    processedLines.push(`<p class="text-slate-700">${trimmed}</p>`);
+                }
             }
+        });
+        if (listStack.length > 0) {
+            processedLines.push(`</${listStack.pop()}>`);
         }
-    };
+        return processedLines.join('');
+    }
 
-    // --- FILE & IMAGE HANDLING ---
-    const fileToBase64 = (file) => new Promise((resolve, reject) => {
+    // --- FILE & IMAGE UTILITIES ---
+    const fileToBase64 = file => new Promise((resolve, reject) => {
         const reader = new FileReader();
         reader.readAsDataURL(file);
         reader.onload = () => resolve(reader.result.split(',')[1]);
@@ -392,140 +304,135 @@
             }
             canvas.width = width;
             canvas.height = height;
-            const ctx = canvas.getContext('2d');
-            ctx.drawImage(img, 0, 0, width, height);
-            canvas.toBlob(blob => resolve(new File([blob], file.name, { type: 'image/jpeg' })), 'image/jpeg', 0.8);
+            canvas.getContext('2d').drawImage(img, 0, 0, width, height);
+            canvas.toBlob(blob => resolve(new File([blob], file.name, { type: 'image/jpeg' })), 'image/jpeg', 0.85);
         };
         img.onerror = reject;
     });
-
-    const performOcr = async (file, ocrType) => {
-        setLoading(ocrType, true);
-        updateMessage(`Performing OCR on ${ocrType.replace('ocr', '')} file...`);
-        try {
-            const resized = await resizeImage(file);
-            const base64Image = await fileToBase64(resized);
-            const prompt = "Extract all text from this image, including handwritten text. Provide only the extracted text.";
-            const payload = { mode: 'ocr', prompt, file: { data: base64Image, mimeType: resized.type } };
-            const result = await fetchWithRetry(PROXY_API_URL, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload) });
-            
-            if (result.candidates?.[0]?.content?.parts?.[0]) {
-                updateMessage(`OCR successful.`, false);
-                return result.candidates[0].content.parts[0].text;
-            }
-            throw new Error('Could not extract text from file.');
-        } catch (error) {
-            updateMessage(`OCR Error: ${error.message}`, true);
-            return '';
-        } finally {
-            setLoading(ocrType, false);
-        }
-    };
     
-    async function handleFileUpload(event, type) {
-        const file = event.target.files[0];
-        if (file) {
-            const ocrText = await performOcr(file, `ocr${type}`);
-            if (type === 'question') state.questionText = ocrText;
-            else if (type === 'modelAnswer') state.modelAnswerText = ocrText;
-            updateUI();
-        }
+    function handleAnswerImageUpload(event) {
+        answerTextarea.value = '';
+        state.answerText = '';
+        
+        const files = Array.from(event.target.files).map(file => ({ id: crypto.randomUUID(), file }));
+        state.answerFiles.push(...files);
+        state.answerFiles.sort((a, b) => a.file.name.localeCompare(b.file.name, undefined, { numeric: true }));
+        
+        updateUI();
+    }
+    
+    function removeAnswerFile(id) {
+        state.answerFiles = state.answerFiles.filter(f => f.id !== id);
+        updateUI();
     }
 
-    function handleAnswerImageUpload(event) {
-        let files = Array.from(event.target.files);
-        files.sort((a, b) => a.name.localeCompare(b.name, undefined, {numeric: true}));
-        state.answerFiles.push(...files.map(file => ({ id: crypto.randomUUID(), file })));
-        state.answerText = ''; 
-        updateUI();
-    };
-
-    // --- CORE AI FUNCTIONS ---
-    async function processEvaluation(promptGenerator) {
+    // --- CORE API LOGIC ---
+    async function evaluateAnswer() {
         setLoading('evaluate', true);
         state.evaluationResult = null;
-        state.generatedModelAnswer = '';
-        updateMessage('Starting evaluation...');
+        state.generatedModelAnswer = null;
+        outputSection.scrollIntoView({ behavior: 'smooth' });
 
         try {
+            updateMessage('Preparing your answer...');
             const payloadParts = [];
+            
+            const prompt = `You are an expert UPSC Mains evaluator. Evaluate the answer based on the question. Your response MUST be in the specified JSON format only. Do not include any other text or markdown formatting around the JSON object.
+
+**QUESTION:** ${state.questionText}
+
+**JSON_FORMAT:**
+{"score": int, "maxMarks": int, "detailed_feedback": {"introduction": {"strengths": "...", "weaknesses": "...", "suggestions_for_improvement": ["..."]}, "body_evaluation": [{"section_title": "...", "evaluation": {"strengths": "...", "weaknesses": "..."}}], "conclusion": {"strengths": "...", "weaknesses": "...", "suggestions_for_improvement": ["..."]}}, "overall_assessment": {"presentation_and_style": "...", "holistic_strengths": ["..."], "priority_areas_for_improvement": ["..."]}}`;
+            
+            payloadParts.push({ text: prompt });
+
+            if (state.answerText.trim()) {
+                payloadParts.push({ text: `\n\n**CANDIDATE'S ANSWER (TEXT):**\n${state.answerText}` });
+            }
+
             if (state.answerFiles.length > 0) {
-                updateMessage('Optimizing images...');
                 for (const [i, item] of state.answerFiles.entries()) {
-                    updateMessage(`Resizing image ${i + 1}/${state.answerFiles.length}...`);
+                    updateMessage(`Processing image ${i + 1}/${state.answerFiles.length}...`);
                     const resized = await resizeImage(item.file);
                     const base64 = await fileToBase64(resized);
                     payloadParts.push({ inlineData: { mimeType: resized.type, data: base64 } });
                 }
             }
-
-            const prompt = promptGenerator(payloadParts.length > 0);
-            payloadParts.unshift({ text: prompt });
             
-            const payload = { contents: [{ role: "user", parts: payloadParts }], generationConfig: { responseMimeType: "application/json" } };
-            
-            updateMessage('AI is analyzing... this may take a moment.');
-            const result = await fetchWithRetry(PROXY_API_URL, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ mode: 'evaluate', payload }) });
+            const payload = { contents: [{ role: "user", parts: payloadParts }] };
+            updateMessage('AI is analyzing... This may take a moment.');
 
-            if (result.candidates?.[0]?.content?.parts?.[0]) {
-                state.evaluationResult = JSON.parse(result.candidates[0].content.parts[0].text);
-                updateMessage('Evaluation complete!', false);
-            } else { throw new Error('Invalid response from AI.'); }
+            const response = await fetch('/api/proxy', { 
+                method: 'POST', 
+                headers: { 'Content-Type': 'application/json' }, 
+                body: JSON.stringify({ mode: 'evaluate', payload }) 
+            });
+
+            if (!response.ok) {
+                const errorData = await response.json();
+                throw new Error(errorData.error || 'The API request failed.');
+            }
+            
+            const result = await response.json();
+            
+            const jsonText = result.candidates[0].content.parts[0].text;
+            state.evaluationResult = JSON.parse(jsonText.match(/\{[\s\S]*\}/)[0]);
+            updateMessage('Evaluation complete!', false);
 
         } catch (error) {
-            updateMessage(`Evaluation Error: ${error.message}`, true);
+            console.error(error);
+            updateMessage(`Error: ${error.message}`, true);
         } finally {
             setLoading('evaluate', false);
         }
     }
-
-    function evaluateWithAI() {
-        const promptGenerator = (hasImages) => {
-            const answerPrompt = hasImages ? "The candidate's answer is in the following images." : `The candidate's answer is: "${state.answerText}"`;
-            return `You are an expert UPSC Mains evaluator. Provide a detailed, structured feedback report based on the following context. **Your response must be in the specified JSON format only.**\n\n**Question:** "${state.questionText}"\n**Answer:** ${answerPrompt}\n**Max Marks:** 10\n\n**JSON Format:**\n{"score": int, "maxMarks": int, "detailed_feedback": {"introduction": {"strengths": "...", "weaknesses": "...", "suggestions_for_improvement": ["..."]}, "body_evaluation": [{"section_title": "...", "evaluation": {...}, "subsections": [...]}, ...], "conclusion": {...}}, "overall_assessment": {"presentation_and_style": "...", "holistic_strengths": ["..."], "priority_areas_for_improvement": ["..."]}}`;
-        };
-        processEvaluation(promptGenerator);
-    }
-
-    function evaluateWithModelAnswer() {
-        const promptGenerator = (hasImages) => {
-            const answerPrompt = hasImages ? "The candidate's answer is in the following images." : `The candidate's answer is: "${state.answerText}"`;
-            return `You are a UPSC evaluator comparing a candidate's answer to a model answer. Identify gaps and alignments. **Your response must be in the specified JSON format only.**\n\n**Question:** "${state.questionText}"\n**Model Answer:** "${state.modelAnswerText}"\n**Candidate's Answer:** ${answerPrompt}\n**Max Marks:** 10\n\n**JSON Format:**\n{"score": int, "maxMarks": int, "detailed_feedback": {"introduction": {"strengths": "...", "weaknesses": "...", "suggestions_for_improvement": ["..."]}, "body_evaluation": [{"section_title": "...", "evaluation": {...}, "subsections": [...]}, ...], "conclusion": {...}}, "overall_assessment": {"presentation_and_style": "...", "holistic_strengths": ["..."], "priority_areas_for_improvement": ["..."]}}`;
-        };
-        processEvaluation(promptGenerator);
-    }
     
-    async function evaluateAnswer() {
-        (state.evaluationType === 'ai' ? evaluateWithAI : evaluateWithModelAnswer)();
-    }
-
     async function generateFullModelAnswer() {
-        setLoading('fullAnswer', true);
-        state.generatedModelAnswer = '';
+        setLoading('generate', true);
         state.evaluationResult = null;
-        updateMessage('Generating model answer...');
+        state.generatedModelAnswer = null;
+        outputSection.scrollIntoView({ behavior: 'smooth' });
+
         try {
-            const prompt = `You are a UPSC subject matter expert. Write a comprehensive, well-structured model answer for the question: "${state.questionText}". Use Markdown for formatting. Adhere to a 150/250 word limit as appropriate.`;
+            updateMessage('Generating model answer...');
+            const prompt = `You are a UPSC subject matter expert. Write a comprehensive, well-structured model answer for the question: "${state.questionText}". Use Markdown for formatting. Adhere to a 150/250 word limit as appropriate for the question's marks (assume 10 marks for ~150 words, 15 for ~250).`;
             const payload = { contents: [{ role: "user", parts: [{ text: prompt }] }] };
-            const result = await fetchWithRetry(PROXY_API_URL, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ mode: 'generate', payload }) });
-            if (result.candidates?.[0]?.content?.parts?.[0]) {
-                state.generatedModelAnswer = result.candidates[0].content.parts[0].text;
-                updateMessage('', false);
-            } else { throw new Error('Could not generate a model answer.'); }
+
+            const response = await fetch('/api/proxy', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ mode: 'generate', payload })
+            });
+
+            if (!response.ok) {
+                const errorData = await response.json();
+                throw new Error(errorData.error || 'The API request failed.');
+            }
+
+            const result = await response.json();
+            state.generatedModelAnswer = result.candidates[0].content.parts[0].text;
+            updateMessage('Model answer generated!', false);
         } catch (error) {
-            updateMessage(`Generation Error: ${error.message}`, true);
+             console.error(error);
+            updateMessage(`Error: ${error.message}`, true);
         } finally {
-            setLoading('fullAnswer', false);
+             setLoading('generate', false);
         }
-    };
+    }
 
     function clearAll() {
-        state = { ...state, questionText: '', answerText: '', modelAnswerText: '', answerFiles: [], generatedModelAnswer: '', evaluationResult: null, evaluationType: 'ai' };
-        document.getElementById('ai-eval').checked = true;
-        document.querySelectorAll('input[type=file]').forEach(el => el.value = '');
+        state.questionText = '';
+        state.answerText = '';
+        state.answerFiles = [];
+        state.evaluationResult = null;
+        state.generatedModelAnswer = null;
+        
+        questionTextarea.value = '';
+        answerTextarea.value = '';
+        answerFileInput.value = '';
+        
         updateUI();
-    };
+    }
 </script>
-
 </body>
 </html>
