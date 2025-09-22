@@ -175,7 +175,7 @@
                     <div class="modern-card p-6 rounded-xl shadow-lg fade-in" style="animation-delay: 0.1s;">
                         <h2 class="text-xl font-semibold mb-4 flex items-center gap-3 text-slate-700">
                             <svg class="w-6 h-6 text-blue-600" xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7Z"/><path d="M14 2v4a2 2 0 0 0 2 2h4"/><path d="M10 9H8"/><path d="M16 13H8"/><path d="M16 17H8"/></svg>
-                             UPSC Question
+                            UPSC Question
                         </h2>
                         <div class="relative">
                             <textarea id="question-textarea" class="w-full p-3 pr-12 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 transition duration-200 min-h-[150px] text-base bg-slate-50/50" placeholder="Paste question text here, or upload an image..."></textarea>
@@ -206,8 +206,8 @@
                         </h2>
                         <div class="relative">
                              <div id="model-answer-editor" contenteditable="true" 
-                                 class="w-full p-3 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 transition duration-200 min-h-[150px] text-base bg-slate-50/50 overflow-y-auto" 
-                                 data-placeholder="Paste formatted model answer here, or upload an image/PDF..."></div>
+                                  class="w-full p-3 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 transition duration-200 min-h-[150px] text-base bg-slate-50/50 overflow-y-auto" 
+                                  data-placeholder="Paste formatted model answer here, or upload an image/PDF..."></div>
                             <label class="absolute top-2 right-2 p-2 rounded-full hover:bg-slate-200 cursor-pointer transition-all duration-200 transform hover:scale-110">
                                 <svg class="w-5 h-5 text-slate-500" xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 14.899A7 7 0 1 1 15.71 8h1.79a4.5 4.5 0 0 1 2.5 8.242"/><path d="M12 12v9"/><path d="m16 16-4-4-4 4"/></svg>
                                 <input id="model-answer-file-input" type="file" accept="image/*,application/pdf" class="hidden" />
@@ -219,7 +219,7 @@
                     <div class="modern-card p-6 rounded-xl shadow-lg fade-in" style="animation-delay: 0.3s;">
                         <h2 class="text-xl font-semibold mb-4 flex items-center gap-3 text-slate-700">
                             <svg class="w-6 h-6 text-blue-600" xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7Z"/><path d="M14 2v4a2 2 0 0 0 2 2h4"/><path d="M10 9H8"/><path d="M16 13H8"/><path d="M16 17H8"/></svg>
-                             Your Answer
+                            Your Answer
                         </h2>
                         <div class="relative">
                             <textarea id="answer-textarea" class="w-full p-3 pr-12 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 transition duration-200 min-h-[120px] text-base bg-slate-50/50" placeholder="Paste answer text here, or upload images..."></textarea>
@@ -262,123 +262,50 @@
 <script>
     // --- IMPORTANT: The API key is now removed from here for security. ---
     
-    // --- UPSC EVALUATION SOP ---
+    // --- UPSC EVALUATION SOP (UPDATED) ---
     const evaluationSOP = {
-      "evaluationFramework": {
-        "version": "1.0",
-        "description": "A comprehensive Standard Operating Procedure (SOP) designed to be used as a prompt or configuration file for an AI model evaluating UPSC Mains answer scripts. The framework is built on a multi-parameter model to ensure objective, consistent, and detailed feedback.",
-        "evaluationParameters": [
-          {
-            "parameter": "Presentation & General",
-            "weight": 0.05,
-            "checks": [
-              {
-                "check": "Presentation Quality",
-                "details": "Assess overall neatness, legibility, and use of spacing. A well-presented answer creates a positive impression and makes the evaluator's job easier. Penalize for illegible handwriting or a cluttered layout that hinders readability."
-              }
-            ]
-          },
-          {
-            "parameter": "Question Comprehension & Directive Adherence",
-            "weight": 0.25,
-            "checks": [
-              {
-                "check": "Directive Alignment",
-                "details": "Analyze the core directive word (e.g., 'Discuss', 'Critically Examine') and evaluate if the answer's structure, tone, and depth align with its specific demand. An answer that is factually correct but misinterprets the directive will score poorly. Use the 'directiveMatrix' for precise instructions."
-              }
-            ]
-          },
-          {
-            "parameter": "Structure & Organization (IBC Framework)",
-            "weight": 0.20,
-            "checks": [
-              {
-                "check": "Body Coherence and Flow",
-                "details": "Evaluate the body for logical progression and coherence. Assess the effective use of sub-headings and bullet points to structure arguments and enhance readability. The answer should not be a random collection of facts but a well-reasoned argument."
-              },
-              {
-                "check": "Conclusion Quality",
-                "details": "Assess the conclusion (approx. 10-15% of word limit). It must provide a sense of closure, summarize key arguments, and not introduce new information. Score higher for forward-looking, balanced, or reformist conclusions. An answer without a conclusion is incomplete and must be penalized."
-              }
-            ]
-          },
-          {
-            "parameter": "Content Quality, Depth & Substantiation",
-            "weight": 0.50,
-            "checks": [
-              {
-                "check": "Multi-Dimensionality",
-                "details": "Check if the answer explores the issue from multiple dimensions (e.g., Social, Political, Economic, Geographical, Environmental, Ethical - PESTEL framework). Breadth of analysis is a key feature of high-scoring answers."
-              },
-              {
-                "check": "Substantiation & Value Addition",
-                "details": "This is a critical differentiator. An argument without evidence is merely an opinion. Apply the 'no example, no marks' principle. Check for the presence and relevance of value-addition elements like: Data/Statistics, Government Schemes, Committee Recommendations (e.g., 2nd ARC), Supreme Court Judgments, Constitutional Articles, Reports (Economic Survey, NITI Aayog), and specific Case Studies/Examples."
-              },
-              {
-                "check": "Tone, Objectivity, and Balance",
-                "details": "Assess if the tone is formal and objective. The answer must be balanced and avoid extreme or one-sided views, especially for 'critically' directives. Check for bias and unsubstantiated personal opinions."
-              },
-              {
-                "check": "Keyword & Concept Optimization",
-                "details": "Identify if the answer uses relevant keywords, concepts, and terminology that examiners expect for that specific topic."
-              }
-            ]
-          }
-        ],
-        "directiveMatrix": [
-            {
-                "directive": "Analyse",
-                "demand": "Break down the issue into its constituent parts and examine the inter-relationships between them (causes, effects, implications).",
-                "expectedStructure": "Intro -> Component A Analysis -> Component B Analysis -> Linkages between A & B -> Overall Implications -> Conclusion.",
-                "evaluationFocus": "Depth of analysis, identification of causal links, and logical reasoning."
-            },
-            {
-                "directive": "Critically Examine / Analyse / Evaluate",
-                "demand": "A higher level of judgment is required. Weigh the pros and cons, strengths and weaknesses, and provide a final, balanced verdict based on evidence.",
-                "expectedStructure": "Intro -> Positives/Strengths (with evidence) -> Negatives/Weaknesses (with evidence) -> Balanced Verdict/Way Forward in Conclusion.",
-                "evaluationFocus": "Depth of critique, balanced treatment of both sides, and a well-substantiated final judgment. The 'Way Forward' is crucial."
-            },
-            {
-                "directive": "Evaluate",
-                "demand": "Assess the value, effectiveness, or worth of a subject against certain criteria.",
-                "expectedStructure": "Intro -> Define Criteria for Evaluation -> Analysis against Criteria (Merits/Demerits) -> Final Judgment on its overall worth.",
-                "evaluationFocus": "Clear criteria for judgment, evidence-based assessment of merits and demerits."
-            },
-            {
-                "directive": "Explain / Elucidate",
-                "demand": "Make a topic, concept, or process clear and easy to understand.",
-                "expectedStructure": "Intro -> Detailed explanation of the concept with simple language -> Use of relevant examples, facts, or diagrams to illustrate -> Conclusion.",
-                "evaluationFocus": "Clarity of explanation, simplicity, and effective use of illustrations to simplify complex ideas."
-            },
-            {
-                "directive": "Comment",
-                "demand": "Offer a well-reasoned opinion on a statement, which must be supported by facts and evidence.",
-                "expectedStructure": "Intro -> Explanation of the statement -> Arguments For/Against -> Your substantiated opinion -> Conclusion.",
-                "evaluationFocus": "Strength and relevance of the evidence used to support the stated opinion."
-            }
-        ],
-        "feedbackGeneration": {
-            "description": "Generate personalized, actionable feedback to guide the user's improvement.",
-            "components": [
+        "evaluationFramework": {
+            "version": "2.0",
+            "description": "A conversational, mentor-like SOP for evaluating UPSC Mains answers. The focus is on a structural review (Introduction, Body, Conclusion) with encouraging and actionable feedback.",
+            "evaluationParameters": [
                 {
-                    "component": "Strengths",
-                    "details": "Highlight 2-3 specific aspects the candidate did well (e.g., 'Excellent use of a recent Supreme Court judgment to substantiate your point.', 'The introduction was impactful and directly addressed the question.')."
+                    "parameter": "Introduction Evaluation",
+                    "details": "Assess the introduction's effectiveness in setting the context and directly addressing the question's core demand.",
+                    "checks": [
+                        { "check": "Strengths", "details": "Identify what was done well. Was the introduction engaging? Did it clearly state the answer's direction?" },
+                        { "check": "Weaknesses & Counterpoints", "details": "Consider where the introduction could be stronger. Was it too generic? Did it miss the core directive?" },
+                        { "check": "Suggestions for Improvement", "details": "Provide concrete examples of how the introduction could have been more impactful." }
+                    ]
                 },
                 {
-                    "component": "Areas for Improvement",
-                    "details": "Provide specific, constructive criticism ranked by impact (e.g., 'The answer lacks a multi-dimensional perspective. Consider adding economic and social angles.', 'The conclusion was abrupt; a forward-looking summary would have been more effective.')."
+                    "parameter": "Body Paragraphs Evaluation",
+                    "details": "Analyze each body paragraph for its argument, evidence, and flow. This is the core of the answer.",
+                    "checks": [
+                        { "check": "Argument Analysis", "details": "Evaluate the quality of the argument. Is it analytical or merely descriptive? Does it directly address a part of the question?" },
+                        { "check": "Content & Evidence", "details": "Assess how well the points are substantiated. Look for relevant facts, data, examples, reports, or judgments." },
+                        { "check": "Structure & Flow", "details": "Check the logical connection between this paragraph and the preceding/succeeding ones. Does it contribute to a coherent overall narrative?" }
+                    ]
                 },
                 {
-                    "component": "Actionable Suggestions",
-                    "details": "Offer concrete advice for the next attempt. This can include specific keywords to add, structural templates for the question type, or examples that could have been used to enrich the content."
-                },
-                {
-                    "component": "Comparative Benchmarking",
-                    "details": "Optionally, compare the answer's characteristics with high-scoring responses from toppers to illustrate what distinguishes an excellent answer (e.g., 'Top-scoring answers on this topic often include a simple flowchart to explain the process, which could have enhanced your presentation.')."
+                    "parameter": "Conclusion Evaluation",
+                    "details": "Evaluate the conclusion's ability to summarize the key arguments and provide a sense of closure.",
+                    "checks": [
+                        { "check": "Strengths", "details": "Did the conclusion effectively summarize the main points without introducing new information?" },
+                        { "check": "Weaknesses", "details": "Was the conclusion abrupt, repetitive, or weak? Did it fail to provide a final, balanced view?" },
+                        { "check": "Suggestions for Improvement", "details": "Suggest how to write a more forward-looking, balanced, or impactful conclusion." }
+                    ]
                 }
-            ]
+            ],
+            "feedbackGeneration": {
+                "description": "Generate feedback in a human, encouraging, and direct tone, addressing the user as 'you'.",
+                "components": [
+                    {
+                        "component": "Overall Feedback",
+                        "details": "Provide a holistic summary of the answer's performance. Zoom out and identify the single most important takeaway for the user to focus on for their next answer."
+                    }
+                ]
+            }
         }
-      }
     };
 
 
@@ -888,11 +815,10 @@
             ${JSON.stringify(evaluationSOP)}
 
             **Your Task:**
-            1.  Internalize the SOP, including the 'evaluationParameters', 'directiveMatrix', and 'feedbackGeneration' components.
+            1.  Internalize the SOP, focusing on the conversational, mentor-like approach and the structural review (Introduction, Body, Conclusion).
             2.  Analyze the user's answer for the given question based *only* on this SOP.
-            3.  Use the 'directiveMatrix' to understand the specific demands of the question's directive word.
-            4.  Use the 'evaluationParameters' and their weights to structure your analysis.
-            5.  Generate feedback according to the 'feedbackGeneration' guidelines.
+            3.  Provide feedback for each section (Introduction, Body, Conclusion) based on the checks defined in the SOP.
+            4.  Generate feedback according to the 'feedbackGeneration' guidelines, focusing on an overall summary.
             
             **Inputs for this Evaluation:**
             * **Question:** "${state.questionText}"
@@ -910,11 +836,10 @@
             ${JSON.stringify(evaluationSOP)}
 
             **आपका कार्य:**
-            1. SOP को आत्मसात करें, जिसमें 'evaluationParameters', 'directiveMatrix', और 'feedbackGeneration' घटक शामिल हैं।
+            1. SOP को आत्मसात करें, जिसमें संवादी, मेंटर-जैसी दृष्टिकोण और संरचनात्मक समीक्षा (परिचय, मुख्य भाग, निष्कर्ष) पर ध्यान केंद्रित किया गया है।
             2. दिए गए प्रश्न के लिए उपयोगकर्ता के उत्तर का विश्लेषण *केवल* इस SOP के आधार पर करें।
-            3. प्रश्न के निर्देशक शब्द की विशिष्ट मांगों को समझने के लिए 'directiveMatrix' का उपयोग करें।
-            4. अपने विश्लेषण की संरचना के लिए 'evaluationParameters' और उनके वेटेज का उपयोग करें।
-            5. 'feedbackGeneration' दिशानिर्देशों के अनुसार प्रतिक्रिया उत्पन्न करें।
+            3. SOP में परिभाषित जांचों के आधार पर प्रत्येक अनुभाग (परिचय, मुख्य भाग, निष्कर्ष) के लिए प्रतिक्रिया प्रदान करें।
+            4. 'feedbackGeneration' दिशानिर्देशों के अनुसार प्रतिक्रिया उत्पन्न करें, जिसमें एक समग्र सारांश पर ध्यान केंद्रित किया गया हो।
 
             **इस मूल्यांकन के लिए इनपुट:**
             * **प्रश्न:** "${state.questionText}"
@@ -988,7 +913,7 @@
         let answerContentPrompt = state.answerFiles.length > 0
             ? "The candidate's answer is in the following images."
             : `The candidate's answer is: "${state.answerText}"`;
-            
+                
         const englishPrompt = `
             You are my personal UPSC mentor. Your task is to evaluate my Mains answer by comparing it against a provided model answer. Your tone should be human, encouraging, and direct.
 
@@ -1166,5 +1091,3 @@
 
 </body>
 </html>
-
-
