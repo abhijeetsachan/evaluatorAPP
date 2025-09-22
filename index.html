@@ -213,7 +213,7 @@
                                 <input id="model-answer-file-input" type="file" accept="image/*,application/pdf" class="hidden" />
                             </label>
                         </div>
-                         <p class="text-xs text-slate-500 mt-2">For text-based PDFs, paste content directly for best results. For image-based PDFs, upload will only OCR the first page.</p>
+                       <p class="text-xs text-slate-500 mt-2">For text-based PDFs, paste content directly for best results. For image-based PDFs, upload will only OCR the first page.</p>
                     </div>
 
                     <div class="modern-card p-6 rounded-xl shadow-lg fade-in" style="animation-delay: 0.3s;">
@@ -449,7 +449,19 @@
                 </div>`;
         } else if (state.evaluationResult) {
             const result = state.evaluationResult;
-            let bodyHtml = (result.body_paragraphs_evaluation || []).map((para, index) => `
+
+            // Point-wise analysis HTML
+            let pointwiseHtml = (result.body_pointwise_analysis || []).map(point => `
+                <div class="pt-4">
+                    <h5 class="font-semibold text-slate-700">${point.theme}</h5>
+                    <div class="prose prose-sm max-w-none text-slate-600 mt-2">
+                        ${renderMarkdown(point.analysis)}
+                    </div>
+                </div>
+            `).join('<hr class="my-4 border-slate-200">');
+            
+            // Paragraph-by-paragraph analysis HTML
+            let bodyParaHtml = (result.body_paragraphs_evaluation || []).map((para, index) => `
                 <div class="pt-4">
                     <h5 class="font-semibold text-slate-700">Paragraph ${index + 1}:</h5>
                     <div class="prose prose-sm max-w-none text-slate-600 mt-2 space-y-3">
@@ -494,8 +506,15 @@
                             </div>
                         </div>
                         <div class="bg-slate-50 p-4 rounded-lg">
-                            <h4 class="font-semibold text-slate-700 mb-2">B. Body Paragraphs Evaluation</h4>
-                            ${bodyHtml}
+                            <h4 class="font-semibold text-slate-700 mb-2">B. Body Evaluation</h4>
+                             ${pointwiseHtml.length > 0 ? `
+                                <div class="mb-6">
+                                    <h5 class="font-bold text-slate-800 mb-2 border-b border-slate-200 pb-2">Thematic Point-wise Analysis</h5>
+                                    ${pointwiseHtml}
+                                </div>
+                                <h5 class="font-bold text-slate-800 mb-2 border-b border-slate-200 pb-2">Paragraph-by-Paragraph Breakdown</h5>
+                             ` : ''}
+                            ${bodyParaHtml}
                         </div>
                         <div class="bg-slate-50 p-4 rounded-lg">
                             <h4 class="font-semibold text-slate-700 mb-2">C. Conclusion Evaluation</h4>
@@ -783,15 +802,18 @@
                 * "strengths": "Here's what I liked about your introduction..."
                 * "weaknesses": "Let's think about some counterpoints or areas where the intro could be stronger..."
                 * "suggestions": "Here’s an example of how you could have approached it..."
-            4.  **"body_paragraphs_evaluation"**: An array of objects, one for each of your body paragraphs. Each object should have:
+            4.  **"body_pointwise_analysis"**: An array of objects. Identify the main thematic arguments from the body. For each theme, create an object with:
+                * "theme": A short, clear title for the theme (e.g., "Mass Inclusion & Expansion").
+                * "analysis": Your concise analysis of how this theme was developed.
+            5.  **"body_paragraphs_evaluation"**: An array of objects, one for each of your body paragraphs. Each object should have:
                 * "argument_analysis": "Let's look at your argument here. Did you analyze or just describe?..."
                 * "content_and_evidence": "How did you back up your points? Let's check the evidence..."
                 * "structure_and_flow": "How does this paragraph connect with the rest of your answer?..."
-            5.  **"conclusion_evaluation"**: An object with three fields:
+            6.  **"conclusion_evaluation"**: An object with three fields:
                 * "strengths": "What worked well in your conclusion..."
                 * "weaknesses": "Where did the conclusion fall a bit short?..."
                 * "suggestions": "Here’s how you could have written a more impactful conclusion..."
-            6.  **"overall_feedback"**: "Okay, let's zoom out. Here's my main take on this answer and the key thing for you to focus on next time..."
+            7.  **"overall_feedback"**: "Okay, let's zoom out. Here's my main take on this answer and the key thing for you to focus on next time..."
         `;
         
         const hindiPrompt = `
@@ -831,7 +853,7 @@
             contents: [{ role: "user", parts: payloadParts }],
             generationConfig: {
                 responseMimeType: "application/json",
-                responseSchema: { type: "OBJECT", properties: { "score": { "type": "NUMBER" }, "maxMarks": { "type": "NUMBER" }, "introduction_evaluation": { type: "OBJECT", properties: { "strengths": { "type": "STRING" }, "weaknesses": { "type": "STRING" }, "suggestions": { "type": "STRING" } } }, "body_paragraphs_evaluation": { type: "ARRAY", items: { type: "OBJECT", properties: { "argument_analysis": { "type": "STRING" }, "content_and_evidence": { "type": "STRING" }, "structure_and_flow": { "type": "STRING" } } } }, "conclusion_evaluation": { type: "OBJECT", properties: { "strengths": { "type": "STRING" }, "weaknesses": { "type": "STRING" }, "suggestions": { "type": "STRING" } } }, "overall_feedback": { "type": "STRING" } } }
+                responseSchema: { type: "OBJECT", properties: { "score": { "type": "NUMBER" }, "maxMarks": { "type": "NUMBER" }, "introduction_evaluation": { type: "OBJECT", properties: { "strengths": { "type": "STRING" }, "weaknesses": { "type": "STRING" }, "suggestions": { "type": "STRING" } } }, "body_pointwise_analysis": { type: "ARRAY", items: { type: "OBJECT", properties: { "theme": { "type": "STRING" }, "analysis": { "type": "STRING" } } } }, "body_paragraphs_evaluation": { type: "ARRAY", items: { type: "OBJECT", properties: { "argument_analysis": { "type": "STRING" }, "content_and_evidence": { "type": "STRING" }, "structure_and_flow": { "type": "STRING" } } } }, "conclusion_evaluation": { type: "OBJECT", properties: { "strengths": { "type": "STRING" }, "weaknesses": { "type": "STRING" }, "suggestions": { "type": "STRING" } } }, "overall_feedback": { "type": "STRING" } } }
             },
         };
 
@@ -894,9 +916,10 @@
             1.  "score": A score based on how closely my answer matches the model answer's quality.
             2.  "maxMarks": The maximum marks.
             3.  "introduction_evaluation": An object with: "strengths", "weaknesses", "suggestions".
-            4.  "body_paragraphs_evaluation": An array of objects, one for each paragraph in my answer. Each object should have: "argument_analysis", "content_and_evidence", "structure_and_flow".
-            5.  "conclusion_evaluation": An object with: "strengths", "weaknesses", "suggestions".
-            6.  "overall_feedback": A summary of the main differences and key takeaways.
+            4.  "body_pointwise_analysis": An array of objects. Identify the main thematic arguments from my answer's body. For each theme, create an object with: "theme" (a short title) and "analysis" (how well this theme aligns with the model answer).
+            5.  "body_paragraphs_evaluation": An array of objects, one for each paragraph in my answer. Each object should have: "argument_analysis", "content_and_evidence", "structure_and_flow".
+            6.  "conclusion_evaluation": An object with: "strengths", "weaknesses", "suggestions".
+            7.  "overall_feedback": A summary of the main differences and key takeaways.
         `;
 
         const hindiPrompt = `
@@ -918,9 +941,10 @@
             1. "score": मेरे उत्तर की गुणवत्ता मॉडल उत्तर से कितनी मेल खाती है, उसके आधार पर एक स्कोर।
             2. "maxMarks": अधिकतम अंक।
             3. "introduction_evaluation": एक ऑब्जेक्ट जिसमें: "strengths", "weaknesses", "suggestions" हों।
-            4. "body_paragraphs_evaluation": मेरे उत्तर के प्रत्येक पैराग्राफ के लिए ऑब्जेक्ट्स की एक श्रृंखला। प्रत्येक ऑब्जेक्ट में: "argument_analysis", "content_and_evidence", "structure_and_flow" होना चाहिए।
-            5. "conclusion_evaluation": एक ऑब्जेक्ट जिसमें: "strengths", "weaknesses", "suggestions" हों।
-            6. "overall_feedback": मुख्य अंतरों और महत्वपूर्ण सीखों का सारांश।
+            4. "body_pointwise_analysis": मेरे उत्तर के मुख्य भाग से मुख्य विषयगत तर्कों की पहचान करें। प्रत्येक विषय के लिए, एक ऑब्जेक्ट बनाएं जिसमें: "theme" (एक संक्षिप्त शीर्षक) और "analysis" (यह विषय मॉडल उत्तर के साथ कितनी अच्छी तरह मेल खाता है) हो।
+            5. "body_paragraphs_evaluation": मेरे उत्तर के प्रत्येक पैराग्राफ के लिए ऑब्जेक्ट्स की एक श्रृंखला। प्रत्येक ऑब्जेक्ट में: "argument_analysis", "content_and_evidence", "structure_and_flow" होना चाहिए।
+            6. "conclusion_evaluation": एक ऑब्जेक्ट जिसमें: "strengths", "weaknesses", "suggestions" हों।
+            7. "overall_feedback": मुख्य अंतरों और महत्वपूर्ण सीखों का सारांश।
         `;
 
         const prompt = language === 'hi' ? hindiPrompt : englishPrompt;
@@ -941,7 +965,7 @@
             contents: [{ role: "user", parts: payloadParts }],
             generationConfig: {
                 responseMimeType: "application/json",
-                responseSchema: { type: "OBJECT", properties: { "score": { "type": "NUMBER" }, "maxMarks": { "type": "NUMBER" }, "introduction_evaluation": { type: "OBJECT", properties: { "strengths": { "type": "STRING" }, "weaknesses": { "type": "STRING" }, "suggestions": { "type": "STRING" } } }, "body_paragraphs_evaluation": { type: "ARRAY", items: { type: "OBJECT", properties: { "argument_analysis": { "type": "STRING" }, "content_and_evidence": { "type": "STRING" }, "structure_and_flow": { "type": "STRING" } } } }, "conclusion_evaluation": { type: "OBJECT", properties: { "strengths": { "type": "STRING" }, "weaknesses": { "type": "STRING" }, "suggestions": { "type": "STRING" } } }, "overall_feedback": { "type": "STRING" } } }
+                responseSchema: { type: "OBJECT", properties: { "score": { "type": "NUMBER" }, "maxMarks": { "type": "NUMBER" }, "introduction_evaluation": { type: "OBJECT", properties: { "strengths": { "type": "STRING" }, "weaknesses": { "type": "STRING" }, "suggestions": { "type": "STRING" } } }, "body_pointwise_analysis": { type: "ARRAY", items: { type: "OBJECT", properties: { "theme": { "type": "STRING" }, "analysis": { "type": "STRING" } } } }, "body_paragraphs_evaluation": { type: "ARRAY", items: { type: "OBJECT", properties: { "argument_analysis": { "type": "STRING" }, "content_and_evidence": { "type": "STRING" }, "structure_and_flow": { "type": "STRING" } } } }, "conclusion_evaluation": { type: "OBJECT", properties: { "strengths": { "type": "STRING" }, "weaknesses": { "type": "STRING" }, "suggestions": { "type": "STRING" } } }, "overall_feedback": { "type": "STRING" } } }
             },
         };
 
