@@ -296,12 +296,6 @@
         modelAnswerFileInput = document.getElementById('model-answer-file-input');
         evaluationTypeRadios = document.querySelectorAll('input[name="evaluationType"]');
 
-        /* This check is no longer needed on the client-side
-        if (!GEMINI_API_KEY) {
-            updateMessage("Error: GEMINI_API_KEY is not set. Please add your key to the script.", true);
-        }
-        */
-
         // Add event listeners
         questionTextarea.addEventListener('input', (e) => {
             state.questionText = e.target.value;
@@ -336,6 +330,11 @@
         // Update state for loader panel
         state.message = message;
         
+        // This is a special call to re-render the loader panel with the new message
+        if (Object.values(state.loadingState).some(Boolean)) {
+            renderOutput();
+        }
+
         // Don't show an empty toast
         if (!message) return;
 
@@ -380,7 +379,6 @@
     function updateUI() {
         if (!questionTextarea) return; // Guard against running before DOM is ready
 
-        // No need to call updateMessage here, it's called when actions happen
         questionTextarea.value = state.questionText;
         answerTextarea.value = state.answerText;
         if (modelAnswerEditor && document.activeElement !== modelAnswerEditor) {
@@ -388,7 +386,6 @@
         }
         answerTextarea.readOnly = state.answerFiles.length > 0;
 
-        // Toggle model answer card visibility
         if (modelAnswerCard) {
             if (state.evaluationType === 'model') {
                 modelAnswerCard.classList.remove('hidden');
@@ -564,7 +561,7 @@
         if (!markdownText) return '';
         let html = markdownText.replace(/```([\s\S]*?)```/g, (match, code) => {
             const escapedCode = code.replace(/</g, '&lt;').replace(/>/g, '&gt;');
-            return `<pre class="bg-slate-100 p-3 rounded-md overflow-x-auto"><code class="text-sm font-mono">${escapCode.trim()}</code></pre>`;
+            return `<pre class="bg-slate-100 p-3 rounded-md overflow-x-auto"><code class="text-sm font-mono">${escapedCode.trim()}</code></pre>`;
         });
         let lines = html.split('\n');
         let processedLines = [];
@@ -686,6 +683,53 @@
         reader.onerror = (error) => reject(error);
     });
 
+    /**
+     * Resizes an image file to a maximum width/height before uploading.
+     * @param {File} file The image file.
+     * @param {number} maxWidth The maximum width or height of the image.
+     * @returns {Promise<File>} A promise that resolves with the resized image file.
+     */
+    const resizeImage = (file, maxWidth = 1536) => new Promise((resolve, reject) => {
+        const reader = new FileReader();
+        reader.readAsDataURL(file);
+        reader.onload = (event) => {
+            const img = new Image();
+            img.src = event.target.result;
+            img.onload = () => {
+                const canvas = document.createElement('canvas');
+                const ctx = canvas.getContext('2d');
+                
+                let width = img.width;
+                let height = img.height;
+
+                if (width > height) {
+                    if (width > maxWidth) {
+                        height *= maxWidth / width;
+                        width = maxWidth;
+                    }
+                } else {
+                    if (height > maxWidth) {
+                        width *= maxWidth / height;
+                        height = maxWidth;
+                    }
+                }
+
+                canvas.width = width;
+                canvas.height = height;
+                ctx.drawImage(img, 0, 0, width, height);
+
+                canvas.toBlob((blob) => {
+                    resolve(new File([blob], file.name, {
+                        type: 'image/jpeg',
+                        lastModified: Date.now()
+                    }));
+                }, 'image/jpeg', 0.8); // 80% quality JPEG
+            };
+            img.onerror = reject;
+        };
+        reader.onerror = reject;
+    });
+
     const performOcr = async (file, ocrType) => {
         if (!file) return '';
         setLoading(ocrType, true);
@@ -757,9 +801,9 @@
     // --- CORE AI FUNCTIONS ---
     async function evaluateAnswer() {
         if (state.evaluationType === 'ai') {
-            evaluateWithAI();
+            await evaluateWithAI();
         } else {
-            evaluateWithModelAnswer();
+            await evaluateWithModelAnswer();
         }
     }
 
@@ -771,33 +815,25 @@
         setLoading('evaluate', true);
         state.evaluationResult = null;
         state.generatedModelAnswer = '';
-        updateMessage('Performing comprehensive AI evaluation...');
+        updateMessage('Starting AI evaluation...');
         
         const { inferredMaxMarks } = getInferredLimits(state.questionText);
-        const language = detectLanguage(state.questionText);
         const payloadParts = [];
         
         let answerContentPrompt = state.answerFiles.length > 0
-            ? "The candidate's answer is in the following images. Please analyze the handwritten text and any diagrams directly from these images."
+            ? "The candidate's answer is in the following images. Analyze the handwritten text and any diagrams directly from these images."
             : `The candidate's answer is: "${state.answerText}"`;
 
         const englishPrompt = `
-            You are an expert UPSC Mains evaluator. Your task is to provide a detailed, structured, and actionable feedback report on a candidate's answer.
+            You are an expert UPSC Mains evaluator. Your task is to provide a detailed, structured, and actionable feedback report on a candidate's answer. Provide specific, actionable feedback with examples, citing relevant reports, judgments, or articles where possible.
 
             **Evaluation Context:**
             * **Question:** "${state.questionText}"
             * **Candidate's Answer:** ${answerContentPrompt}
             * **Maximum Marks:** ${inferredMaxMarks}
 
-            **Instructions for Feedback Report:**
-            1.  **Be Specific & Actionable:** Generic feedback is not useful. Provide concrete examples from the answer. Instead of "weak analysis," say "The analysis in paragraph 2 describes the problem but fails to connect it to the constitutional provisions mentioned in the introduction."
-            2.  **Use Syllabus Keywords:** Integrate relevant keywords from the UPSC syllabus into your suggestions (e.g., 'emotional intelligence', 'probity', 'judicial activism').
-            3.  **Cite Sources:** Suggest specific reports (2nd ARC, NITI Aayog), committees, landmark judgments (e.g., Kesavananda Bharati, Vishakha Guidelines), or constitutional articles to enrich the answer.
-            4.  **Structure is Key:** Analyze the introduction, body (by sections/themes), and conclusion separately.
-            5.  **Maintain a Professional Tone:** Be critical but constructive.
-
             **Your Feedback Report (JSON Format ONLY):**
-            Provide your evaluation **strictly** in the following JSON format. All string values must contain specific, actionable feedback.
+            Provide your evaluation **strictly** in the following JSON format.
             
             {
               "score": <A numerical score for the answer>,
@@ -806,11 +842,7 @@
                 "introduction": {
                   "strengths": "- Strengths of the introduction (e.g., 'Effectively defined the core concept').",
                   "weaknesses": "- Weaknesses of the introduction (e.g., 'Lacked a clear thesis statement or context').",
-                  "suggestions_for_improvement": [
-                    "Start with a compelling statistic from a relevant report (e.g., NITI Aayog's SDG Index) to set the context.",
-                    "Clearly define the central keyword of the question as per the syllabus.",
-                    "Ground your introduction by citing the relevant Constitutional Article (e.g., Article 21 for a rights-based question)."
-                  ]
+                  "suggestions_for_improvement": ["Start with a compelling statistic from a relevant report (e.g., NITI Aayog's SDG Index)."]
                 },
                 "body_evaluation": [
                   {
@@ -825,98 +857,59 @@
                         "evaluation": {
                           "strengths": "- What was argued well in this specific point.",
                           "weaknesses": "- Where this specific point lacked depth or evidence.",
-                          "suggestions_for_improvement": [
-                            "To strengthen this point, cite a specific recommendation from the 2nd ARC report on Ethics.",
-                            "Mention the landmark Vishakha Guidelines case to illustrate the point on judicial activism.",
-                            "Incorporate the keyword 'emotional intelligence' when discussing the role of the civil servant.",
-                            "A simple flowchart showing the decision-making process would be very effective here."
-                          ]
+                          "suggestions_for_improvement": ["To strengthen this point, cite a specific recommendation from the 2nd ARC report on Ethics."]
                         }
                       }
                     ]
-                  },
-                  {
-                    "section_title": "[Title of the second major section/theme of the answer]",
-                    "evaluation": {
-                        "strengths": "- Strengths of this section.",
-                        "weaknesses": "- Weaknesses of this section."
-                    },
-                    "subsections": []
                   }
                 ],
                 "conclusion": {
                   "strengths": "- What worked well in the conclusion (e.g., 'Good summary of arguments').",
                   "weaknesses": "- Where the conclusion fell short (e.g., 'Was repetitive, lacked a forward-looking perspective').",
-                  "suggestions_for_improvement": [
-                    "Conclude with a balanced and optimistic 'way forward' that synthesizes your main arguments.",
-                    "End by invoking a broader constitutional ideal or a goal from the Preamble.",
-                    "A relevant quote from a thinker like Gandhi or Aristotle could make for a powerful ending (especially for GS4)."
-                  ]
+                  "suggestions_for_improvement": ["Conclude with a balanced and optimistic 'way forward' that synthesizes your main arguments."]
                 }
               },
               "overall_assessment": {
                 "presentation_and_style": "- Feedback on handwriting, use of headings, underlining, and overall neatness.",
-                "holistic_strengths": [
-                  "- List of the 2-3 biggest strengths of the entire answer.",
-                  "- e.g., 'Excellent command of the basic facts.'",
-                  "- e.g., 'Great structure and clarity.'"
-                ],
-                "priority_areas_for_improvement": [
-                  "- The 2-3 most critical things the candidate must focus on for the next answer.",
-                  "- e.g., 'Focus on integrating specific evidence over generic statements.'",
-                  "- e.g., 'Practice writing more forward-looking and optimistic conclusions.'"
-                ]
+                "holistic_strengths": ["- List of the 2-3 biggest strengths of the entire answer."],
+                "priority_areas_for_improvement": ["- The 2-3 most critical things for the candidate to focus on next time."]
               }
             }
         `;
         
-        const hindiPrompt = `
-             आप एक विशेषज्ञ यूपीएससी मेन्स मूल्यांकनकर्ता हैं। आपका कार्य एक उम्मीदवार के उत्तर पर एक विस्तृत, संरचित और कार्रवाई योग्य प्रतिक्रिया रिपोर्ट प्रदान करना है।
-
-            **मूल्यांकन संदर्भ:**
-            * **प्रश्न:** "${state.questionText}"
-            * **उम्मीदवार का उत्तर:** ${answerContentPrompt}
-            * **अधिकतम अंक:** ${inferredMaxMarks}
-
-            **फीडबैक रिपोर्ट के लिए निर्देश (JSON प्रारूप केवल):**
-            अपना मूल्यांकन **केवल** निम्नलिखित JSON प्रारूप में प्रदान करें। सभी स्ट्रिंग मानों में विशिष्ट, कार्रवाई योग्य प्रतिक्रिया होनी चाहिए। **सभी फ़ील्ड्स को हिंदी में भरें।**
-        `;
-
-        const prompt = language === 'hi' ? englishPrompt : englishPrompt; // Using English prompt for both for now, as Hindi schema needs careful setup
-        payloadParts.push({ text: prompt });
-
-        if (state.answerFiles.length > 0) {
-            try {
-                for (const item of state.answerFiles) {
-                    const base64Image = await fileToBase64(item.file);
-                    payloadParts.push({ inlineData: { mimeType: item.file.type, data: base64Image } });
-                }
-            } catch (error) {
-                updateMessage(`Error processing images for evaluation: ${error.message}`, true);
-                setLoading('evaluate', false);
-                return;
-            }
-        }
-
-        const payload = {
-            contents: [{ role: "user", parts: payloadParts }],
-            generationConfig: {
-                responseMimeType: "application/json",
-                responseSchema: {"type":"OBJECT","properties":{"score":{"type":"NUMBER"},"maxMarks":{"type":"NUMBER"},"detailed_feedback":{"type":"OBJECT","properties":{"introduction":{"type":"OBJECT","properties":{"strengths":{"type":"STRING"},"weaknesses":{"type":"STRING"},"suggestions_for_improvement":{"type":"ARRAY","items":{"type":"STRING"}}}},"body_evaluation":{"type":"ARRAY","items":{"type":"OBJECT","properties":{"section_title":{"type":"STRING"},"evaluation":{"type":"OBJECT","properties":{"strengths":{"type":"STRING"},"weaknesses":{"type":"STRING"}}},"subsections":{"type":"ARRAY","items":{"type":"OBJECT","properties":{"subsection_title":{"type":"STRING"},"evaluation":{"type":"OBJECT","properties":{"strengths":{"type":"STRING"},"weaknesses":{"type":"STRING"},"suggestions_for_improvement":{"type":"ARRAY","items":{"type":"STRING"}}}}}}}}}},"conclusion":{"type":"OBJECT","properties":{"strengths":{"type":"STRING"},"weaknesses":{"type":"STRING"},"suggestions_for_improvement":{"type":"ARRAY","items":{"type":"STRING"}}}}}},"overall_assessment":{"type":"OBJECT","properties":{"presentation_and_style":{"type":"STRING"},"holistic_strengths":{"type":"ARRAY","items":{"type":"STRING"}},"priority_areas_for_improvement":{"type":"ARRAY","items":{"type":"STRING"}}}}}}
-            },
-        };
+        payloadParts.push({ text: englishPrompt });
 
         try {
+            if (state.answerFiles.length > 0) {
+                updateMessage('Optimizing images for analysis...');
+                for (const [index, item] of state.answerFiles.entries()) {
+                    updateMessage(`Resizing image ${index + 1}/${state.answerFiles.length}...`);
+                    const resizedFile = await resizeImage(item.file);
+                    const base64Image = await fileToBase64(resizedFile);
+                    payloadParts.push({ inlineData: { mimeType: resizedFile.type, data: base64Image } });
+                }
+            }
+
+            updateMessage('Sending to AI for evaluation...');
+            const payload = {
+                contents: [{ role: "user", parts: payloadParts }],
+                generationConfig: {
+                    responseMimeType: "application/json",
+                    responseSchema: {"type":"OBJECT","properties":{"score":{"type":"NUMBER"},"maxMarks":{"type":"NUMBER"},"detailed_feedback":{"type":"OBJECT","properties":{"introduction":{"type":"OBJECT","properties":{"strengths":{"type":"STRING"},"weaknesses":{"type":"STRING"},"suggestions_for_improvement":{"type":"ARRAY","items":{"type":"STRING"}}}},"body_evaluation":{"type":"ARRAY","items":{"type":"OBJECT","properties":{"section_title":{"type":"STRING"},"evaluation":{"type":"OBJECT","properties":{"strengths":{"type":"STRING"},"weaknesses":{"type":"STRING"}}},"subsections":{"type":"ARRAY","items":{"type":"OBJECT","properties":{"subsection_title":{"type":"STRING"},"evaluation":{"type":"OBJECT","properties":{"strengths":{"type":"STRING"},"weaknesses":{"type":"STRING"},"suggestions_for_improvement":{"type":"ARRAY","items":{"type":"STRING"}}}}}}}}}},"conclusion":{"type":"OBJECT","properties":{"strengths":{"type":"STRING"},"weaknesses":{"type":"STRING"},"suggestions_for_improvement":{"type":"ARRAY","items":{"type":"STRING"}}}}}},"overall_assessment":{"type":"OBJECT","properties":{"presentation_and_style":{"type":"STRING"},"holistic_strengths":{"type":"ARRAY","items":{"type":"STRING"}},"priority_areas_for_improvement":{"type":"ARRAY","items":{"type":"STRING"}}}}}}
+                },
+            };
+            
             const backendPayload = { mode: 'evaluate', payload: payload };
+            updateMessage('AI is analyzing your answer... this may take a moment.');
             const response = await fetchWithRetry(PROXY_API_URL, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(backendPayload) });
             const result = await response.json();
-            if (result.error) {
-                throw new Error(result.error);
-            }
+            
+            if (result.error) throw new Error(result.error);
+
             if (result.candidates?.[0]?.content?.parts?.[0]) {
                 const parsedResult = JSON.parse(result.candidates[0].content.parts[0].text);
                 state.evaluationResult = parsedResult;
-                updateMessage('Evaluation complete!');
+                updateMessage('Evaluation complete!', false);
             } else {
                 updateMessage('Could not get a valid AI evaluation.', true);
             }
@@ -936,10 +929,9 @@
         setLoading('evaluate', true);
         state.evaluationResult = null;
         state.generatedModelAnswer = '';
-        updateMessage('Evaluating based on model answer...');
+        updateMessage('Starting model answer comparison...');
 
         const { inferredMaxMarks } = getInferredLimits(state.questionText);
-        const language = detectLanguage(state.questionText);
         const payloadParts = [];
         
         let answerContentPrompt = state.answerFiles.length > 0
@@ -947,18 +939,13 @@
             : `The candidate's answer is: "${state.answerText}"`;
                 
         const englishPrompt = `
-            You are an expert UPSC Mains evaluator comparing a candidate's answer against a model answer.
+            You are an expert UPSC Mains evaluator comparing a candidate's answer against a model answer. Identify gaps and alignments.
 
             **Evaluation Context:**
             * **Question:** "${state.questionText}"
             * **Model Answer:** "${state.modelAnswerText}"
             * **Candidate's Answer:** ${answerContentPrompt}
             * **Maximum Marks:** ${inferredMaxMarks}
-
-            **Instructions for Feedback Report:**
-            1.  **Direct Comparison:** Your feedback must be based on a direct comparison between the candidate's answer and the model answer. Identify points of convergence and divergence.
-            2.  **Identify Gaps:** Pinpoint specific facts, arguments, keywords, or structural elements present in the model answer but missing from the candidate's answer.
-            3.  **Acknowledge Strengths:** Note where the candidate's answer aligns with or perhaps even offers a unique valid point not in the model answer.
 
             **Your Feedback Report (JSON Format ONLY):**
             Provide your comparative evaluation **strictly** in the following JSON format.
@@ -975,8 +962,7 @@
                 "body_evaluation": [
                   {
                     "section_title": "[Theme of the first section, based on model answer's structure]",
-                    "evaluation": { "strengths": "- Points where you matched the model.", "weaknesses": "- Key arguments from the model that you missed." },
-                    "subsections": []
+                    "evaluation": { "strengths": "- Points where you matched the model.", "weaknesses": "- Key arguments from the model that you missed." }, "subsections": []
                   }
                 ],
                 "conclusion": {
@@ -992,40 +978,39 @@
               }
             }
         `;
-
-        const prompt = englishPrompt; // Keeping it simple for model comparison
-        payloadParts.push({ text: prompt });
+        payloadParts.push({ text: englishPrompt });
         
-        if (state.answerFiles.length > 0) {
-            try {
-                for (const item of state.answerFiles) {
-                    const base64Image = await fileToBase64(item.file);
-                    payloadParts.push({ inlineData: { mimeType: item.file.type, data: base64Image } });
-                }
-            } catch (error) {
-                updateMessage(`Error processing images: ${error.message}`, true); setLoading('evaluate', false); return;
-            }
-        }
-
-       const payload = {
-            contents: [{ role: "user", parts: payloadParts }],
-            generationConfig: {
-                responseMimeType: "application/json",
-                responseSchema: {"type":"OBJECT","properties":{"score":{"type":"NUMBER"},"maxMarks":{"type":"NUMBER"},"detailed_feedback":{"type":"OBJECT","properties":{"introduction":{"type":"OBJECT","properties":{"strengths":{"type":"STRING"},"weaknesses":{"type":"STRING"},"suggestions_for_improvement":{"type":"ARRAY","items":{"type":"STRING"}}}},"body_evaluation":{"type":"ARRAY","items":{"type":"OBJECT","properties":{"section_title":{"type":"STRING"},"evaluation":{"type":"OBJECT","properties":{"strengths":{"type":"STRING"},"weaknesses":{"type":"STRING"}}},"subsections":{"type":"ARRAY","items":{"type":"OBJECT","properties":{"subsection_title":{"type":"STRING"},"evaluation":{"type":"OBJECT","properties":{"strengths":{"type":"STRING"},"weaknesses":{"type":"STRING"},"suggestions_for_improvement":{"type":"ARRAY","items":{"type":"STRING"}}}}}}}}}},"conclusion":{"type":"OBJECT","properties":{"strengths":{"type":"STRING"},"weaknesses":{"type":"STRING"},"suggestions_for_improvement":{"type":"ARRAY","items":{"type":"STRING"}}}}}},"overall_assessment":{"type":"OBJECT","properties":{"presentation_and_style":{"type":"STRING"},"holistic_strengths":{"type":"ARRAY","items":{"type":"STRING"}},"priority_areas_for_improvement":{"type":"ARRAY","items":{"type":"STRING"}}}}}}
-            },
-        };
-
         try {
+            if (state.answerFiles.length > 0) {
+                updateMessage('Optimizing images for comparison...');
+                for (const [index, item] of state.answerFiles.entries()) {
+                    updateMessage(`Resizing image ${index + 1}/${state.answerFiles.length}...`);
+                    const resizedFile = await resizeImage(item.file);
+                    const base64Image = await fileToBase64(resizedFile);
+                    payloadParts.push({ inlineData: { mimeType: resizedFile.type, data: base64Image } });
+                }
+            }
+            
+            updateMessage('Sending to AI for comparison...');
+            const payload = {
+                contents: [{ role: "user", parts: payloadParts }],
+                generationConfig: {
+                    responseMimeType: "application/json",
+                    responseSchema: {"type":"OBJECT","properties":{"score":{"type":"NUMBER"},"maxMarks":{"type":"NUMBER"},"detailed_feedback":{"type":"OBJECT","properties":{"introduction":{"type":"OBJECT","properties":{"strengths":{"type":"STRING"},"weaknesses":{"type":"STRING"},"suggestions_for_improvement":{"type":"ARRAY","items":{"type":"STRING"}}}},"body_evaluation":{"type":"ARRAY","items":{"type":"OBJECT","properties":{"section_title":{"type":"STRING"},"evaluation":{"type":"OBJECT","properties":{"strengths":{"type":"STRING"},"weaknesses":{"type":"STRING"}}},"subsections":{"type":"ARRAY","items":{"type":"OBJECT","properties":{"subsection_title":{"type":"STRING"},"evaluation":{"type":"OBJECT","properties":{"strengths":{"type":"STRING"},"weaknesses":{"type":"STRING"},"suggestions_for_improvement":{"type":"ARRAY","items":{"type":"STRING"}}}}}}}}}},"conclusion":{"type":"OBJECT","properties":{"strengths":{"type":"STRING"},"weaknesses":{"type":"STRING"},"suggestions_for_improvement":{"type":"ARRAY","items":{"type":"STRING"}}}}}},"overall_assessment":{"type":"OBJECT","properties":{"presentation_and_style":{"type":"STRING"},"holistic_strengths":{"type":"ARRAY","items":{"type":"STRING"}},"priority_areas_for_improvement":{"type":"ARRAY","items":{"type":"STRING"}}}}}}
+                },
+            };
+
             const backendPayload = { mode: 'evaluate', payload: payload };
+            updateMessage('AI is comparing the answers...');
             const response = await fetchWithRetry(PROXY_API_URL, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(backendPayload) });
             const result = await response.json();
-            if (result.error) {
-                throw new Error(result.error);
-            }
+
+            if (result.error) throw new Error(result.error);
+
             if (result.candidates?.[0]?.content?.parts?.[0]) {
                 const parsedResult = JSON.parse(result.candidates[0].content.parts[0].text);
                 state.evaluationResult = parsedResult;
-                updateMessage('Model answer evaluation complete!');
+                updateMessage('Model answer evaluation complete!', false);
             } else {
                 updateMessage('Could not get a valid evaluation from the model answer.', true);
             }
@@ -1051,17 +1036,6 @@
         const language = detectLanguage(state.questionText);
         const totalTargetWords = inferredWordLimit === '150 words' ? 200 : 300;
 
-        const hindiPrompt = `
-            आप एक यूपीएससी विषय विशेषज्ञ हैं। निम्नलिखित प्रश्न के लिए एक व्यापक, सुव्यवस्थित मॉडल उत्तर लिखें।
-            **निर्देश:**
-            - लगभग ${inferredWordLimit === '150 words' ? '१५० शब्दों' : '२५० शब्दों'} की शब्द सीमा का सख्ती से पालन करें। कुल शब्द संख्या ${totalTargetWords} शब्दों से अधिक नहीं होनी चाहिए।
-            - उत्तर को एक स्पष्ट परिचय, मुख्य भाग और निष्कर्ष के साथ संरचित करें।
-            - स्वरूपण के लिए मार्कडाउन का उपयोग करें: मुख्य शीर्षकों के लिए '##' और उप-शीर्षकों के लिए '###'। सूचियों के लिए बुलेट पॉइंट ('* ') का उपयोग करें।
-            - सुनिश्चित करें कि सामग्री सटीक, प्रासंगिक है और प्रश्न के सभी पहलुओं को शामिल करती है।
-            - लहजा औपचारिक और अकादमिक होना चाहिए।
-            **प्रश्न:** "${state.questionText}"
-        `;
-
         const englishPrompt = `
             You are a UPSC subject matter expert. Write a comprehensive, well-structured model answer for the following question.
             **Instructions:**
@@ -1073,7 +1047,7 @@
             **Question:** "${state.questionText}"
         `;
         
-        const prompt = language === 'hi' ? hindiPrompt : englishPrompt;
+        const prompt = englishPrompt; // Simplified for clarity
         const payload = { contents: [{ role: "user", parts: [{ text: prompt }] }] };
 
         try {
@@ -1085,7 +1059,7 @@
             }
             if (result.candidates?.[0]?.content?.parts?.[0]) {
                 state.generatedModelAnswer = result.candidates[0].content.parts[0].text;
-                updateMessage(''); // Clear message on success
+                updateMessage('', false); // Clear message on success
             } else {
                 updateMessage('Could not generate a model answer.', true);
             }
@@ -1109,7 +1083,7 @@
         if(document.getElementById('ai-eval')) {
             document.getElementById('ai-eval').checked = true;
         }
-        updateMessage('');
+        updateMessage('', false);
         if (resetFileInputs) {
             if(questionFileInput) questionFileInput.value = '';
             if(answerFileInput) answerFileInput.value = '';
