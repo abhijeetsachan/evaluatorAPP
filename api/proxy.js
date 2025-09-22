@@ -1,66 +1,40 @@
-// This is a serverless function that will run on Vercel's backend.
-// It is written in Node.js.
+// /api/proxy.js
+
+import { GoogleGenerativeAI } from '@google/generative-ai';
 
 export default async function handler(request, response) {
-    // 1. Check if the request method is POST.
+    // Vercel automatically parses the body, so we can use it directly.
+    // It also runs on POST by default for the proxy.
     if (request.method !== 'POST') {
-        return response.status(405).json({ error: 'Method Not Allowed' });
+        return response.status(405).json({ message: 'Only POST requests are allowed' });
     }
-
-    // 2. Get the secret API key from environment variables.
-    // This key is stored securely on the server, not in the code.
-    const GEMINI_API_KEY = process.env.GEMINI_API_KEY;
-
-    if (!GEMINI_API_KEY) {
-        return response.status(500).json({ error: 'API key is not configured on the server.' });
-    }
-
-    // 3. Define the actual Google Gemini API endpoint.
-    const GEMINI_API_URL = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-preview-05-20:generateContent?key=${GEMINI_API_KEY}`;
 
     try {
+        const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY);
         const { mode, payload, prompt, file } = request.body;
-        let finalPayload;
 
-        // 4. Construct the correct payload based on the 'mode' sent from the frontend.
+        const modelName = "gemini-1.5-flash"; // Use a single, powerful model
+        const model = genAI.getGenerativeModel({ model: modelName });
+
+        let result;
         if (mode === 'ocr') {
-            finalPayload = {
-                contents: [{
-                    role: "user",
-                    parts: [
-                        { text: prompt },
-                        { inlineData: { mimeType: file.mimeType, data: file.data } }
-                    ]
-                }]
+            const imagePart = {
+                inlineData: {
+                    data: file.data,
+                    mimeType: file.mimeType,
+                },
             };
-        } else if (mode === 'evaluate' || mode === 'generate') {
-            finalPayload = payload;
+            result = await model.generateContent([prompt, imagePart]);
         } else {
-            return response.status(400).json({ error: 'Invalid mode specified.' });
+            // For 'evaluate' and 'generate' modes
+            result = await model.generateContent(payload);
         }
 
-        // 5. Make the secure, server-to-server call to the Gemini API.
-        const geminiResponse = await fetch(GEMINI_API_URL, {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-            },
-            body: JSON.stringify(finalPayload),
-        });
-
-        // 6. Check if the call to Google was successful.
-        if (!geminiResponse.ok) {
-            const errorText = await geminiResponse.text();
-            console.error("Gemini API Error:", errorText);
-            return response.status(geminiResponse.status).json({ error: `Gemini API failed: ${errorText}` });
-        }
-
-        // 7. Get the JSON data from Google and send it back to our frontend.
-        const data = await geminiResponse.json();
-        return response.status(200).json(data);
+        // Send the successful response back to the front-end
+        response.status(200).json(result.response);
 
     } catch (error) {
-        console.error("Proxy Error:", error);
-        return response.status(500).json({ error: error.message });
+        console.error('Error in serverless function:', error);
+        response.status(500).json({ error: `An error occurred: ${error.message}` });
     }
 }
