@@ -449,22 +449,43 @@
                 </div>`;
         } else if (state.evaluationResult) {
             const result = state.evaluationResult;
-            let bodyHtml = (result.body_paragraphs_evaluation || []).map((para, index) => `
+            const feedback = result.detailed_feedback;
+            const assessment = result.overall_assessment;
+
+            // Helper to render array to bulleted list
+            const renderList = (items) => {
+                if (!items || items.length === 0) return '<p class="text-slate-500">None provided.</p>';
+                return `
+                    <ul class="list-disc pl-5 space-y-1">
+                        ${items.map(item => `<li class="text-slate-600">${item}</li>`).join('')}
+                    </ul>`;
+            };
+            
+            let bodyHtml = (feedback.body_evaluation || []).map(section => `
                 <div class="pt-4">
-                    <h5 class="font-semibold text-slate-700">Paragraph ${index + 1}:</h5>
-                    <div class="prose prose-sm max-w-none text-slate-600 mt-2 space-y-3">
+                    <h5 class="font-semibold text-slate-700">${section.section_title}</h5>
+                    <div class="prose prose-sm max-w-none text-slate-600 mt-2 space-y-3 pl-4 border-l-2 border-slate-200">
                         <div>
-                            <p class="font-semibold text-slate-600">Argument Analysis:</p>
-                            ${renderMarkdown(para.argument_analysis)}
+                            <p class="font-semibold text-slate-600">Strengths:</p>
+                            ${renderMarkdown(section.evaluation.strengths)}
                         </div>
                         <div>
-                            <p class="font-semibold text-slate-600">Content & Evidence:</p>
-                            ${renderMarkdown(para.content_and_evidence)}
+                            <p class="font-semibold text-slate-600">Weaknesses:</p>
+                            ${renderMarkdown(section.evaluation.weaknesses)}
                         </div>
-                        <div>
-                            <p class="font-semibold text-slate-600">Structure & Flow:</p>
-                            ${renderMarkdown(para.structure_and_flow)}
-                        </div>
+                        ${(section.subsections || []).map(sub => `
+                            <div class="mt-3 pt-3 border-t border-slate-200">
+                                <h6 class="font-semibold text-slate-600">${sub.subsection_title}</h6>
+                                <div class="pl-4">
+                                    <p class="font-medium text-slate-500 mt-1">Strengths:</p>
+                                    ${renderMarkdown(sub.evaluation.strengths)}
+                                    <p class="font-medium text-slate-500 mt-1">Weaknesses:</p>
+                                    ${renderMarkdown(sub.evaluation.weaknesses)}
+                                    <p class="font-medium text-slate-500 mt-1">Suggestions for Improvement:</p>
+                                    ${renderList(sub.evaluation.suggestions_for_improvement)}
+                                </div>
+                            </div>
+                        `).join('')}
                     </div>
                 </div>`).join('<hr class="my-4 border-slate-200">');
 
@@ -475,49 +496,48 @@
                         <p class="text-4xl font-bold text-blue-600 mt-1 tracking-tight">${result.score} / ${result.maxMarks}</p>
                     </div>
                     <div class="space-y-4">
-                        <h3 class="text-xl font-semibold text-slate-800 border-b pb-2">Detailed Evaluation</h3>
+                        <h3 class="text-xl font-semibold text-slate-800 border-b pb-2">Detailed Feedback</h3>
+                        
                         <div class="bg-slate-50 p-4 rounded-lg">
-                            <h4 class="font-semibold text-slate-700 mb-2">A. Introduction Evaluation</h4>
+                            <h4 class="font-semibold text-slate-700 mb-2">A. Introduction</h4>
                             <div class="prose prose-sm max-w-none text-slate-600 space-y-3">
-                                <div>
-                                    <p class="font-semibold text-slate-600">Strengths:</p>
-                                    ${renderMarkdown(result.introduction_evaluation?.strengths)}
-                                </div>
-                                <div>
-                                    <p class="font-semibold text-slate-600">Weaknesses & Counterpoints:</p>
-                                    ${renderMarkdown(result.introduction_evaluation?.weaknesses)}
-                                </div>
-                                <div>
-                                    <p class="font-semibold text-slate-600">Suggestions for Improvement:</p>
-                                    ${renderMarkdown(result.introduction_evaluation?.suggestions)}
-                                </div>
+                                <div><p class="font-semibold">Strengths:</p>${renderMarkdown(feedback.introduction.strengths)}</div>
+                                <div><p class="font-semibold">Weaknesses:</p>${renderMarkdown(feedback.introduction.weaknesses)}</div>
+                                <div><p class="font-semibold">Suggestions for Improvement:</p>${renderList(feedback.introduction.suggestions_for_improvement)}</div>
                             </div>
                         </div>
+
                         <div class="bg-slate-50 p-4 rounded-lg">
-                            <h4 class="font-semibold text-slate-700 mb-2">B. Body Paragraphs Evaluation</h4>
+                            <h4 class="font-semibold text-slate-700 mb-2">B. Body Evaluation</h4>
                             ${bodyHtml}
                         </div>
+
                         <div class="bg-slate-50 p-4 rounded-lg">
-                            <h4 class="font-semibold text-slate-700 mb-2">C. Conclusion Evaluation</h4>
+                            <h4 class="font-semibold text-slate-700 mb-2">C. Conclusion</h4>
                             <div class="prose prose-sm max-w-none text-slate-600 space-y-3">
-                                <div>
-                                    <p class="font-semibold text-slate-600">Strengths:</p>
-                                    ${renderMarkdown(result.conclusion_evaluation?.strengths)}
-                                </div>
-                                <div>
-                                    <p class="font-semibold text-slate-600">Weaknesses:</p>
-                                    ${renderMarkdown(result.conclusion_evaluation?.weaknesses)}
-                                </div>
-                                <div>
-                                    <p class="font-semibold text-slate-600">Suggestions for Improvement:</p>
-                                    ${renderMarkdown(result.conclusion_evaluation?.suggestions)}
-                                </div>
+                                <div><p class="font-semibold">Strengths:</p>${renderMarkdown(feedback.conclusion.strengths)}</div>
+                                <div><p class="font-semibold">Weaknesses:</p>${renderMarkdown(feedback.conclusion.weaknesses)}</div>
+                                <div><p class="font-semibold">Suggestions for Improvement:</p>${renderList(feedback.conclusion.suggestions_for_improvement)}</div>
                             </div>
                         </div>
                     </div>
+                    
                     <div>
-                        <h3 class="text-lg font-semibold text-slate-700 mb-2">Overall Feedback:</h3>
-                        <div class="prose prose-sm max-w-none">${renderMarkdown(result.overall_feedback)}</div>
+                        <h3 class="text-xl font-semibold text-slate-800 border-b pb-2">Overall Assessment</h3>
+                        <div class="bg-slate-50 p-4 rounded-lg mt-4 space-y-4">
+                             <div>
+                                <h4 class="font-semibold text-slate-700 mb-2">Presentation & Style:</h4>
+                                <div class="prose prose-sm max-w-none">${renderMarkdown(assessment.presentation_and_style)}</div>
+                            </div>
+                             <div>
+                                <h4 class="font-semibold text-slate-700 mb-2">Holistic Strengths:</h4>
+                                ${renderList(assessment.holistic_strengths)}
+                            </div>
+                             <div>
+                                <h4 class="font-semibold text-slate-700 mb-2">Priority Areas for Improvement:</h4>
+                                ${renderList(assessment.priority_areas_for_improvement)}
+                            </div>
+                        </div>
                     </div>
                 </div>`;
         } else if (state.generatedModelAnswer) {
@@ -544,7 +564,7 @@
         if (!markdownText) return '';
         let html = markdownText.replace(/```([\s\S]*?)```/g, (match, code) => {
             const escapedCode = code.replace(/</g, '&lt;').replace(/>/g, '&gt;');
-            return `<pre class="bg-slate-100 p-3 rounded-md overflow-x-auto"><code class="text-sm font-mono">${escapedCode.trim()}</code></pre>`;
+            return `<pre class="bg-slate-100 p-3 rounded-md overflow-x-auto"><code class="text-sm font-mono">${escapCode.trim()}</code></pre>`;
         });
         let lines = html.split('\n');
         let processedLines = [];
@@ -762,56 +782,107 @@
             : `The candidate's answer is: "${state.answerText}"`;
 
         const englishPrompt = `
-            You are my personal UPSC mentor. Your task is to evaluate my Mains answer as if we're sitting down together to review it. Use a human, encouraging, and direct tone. Address me as "you".
+            You are an expert UPSC Mains evaluator. Your task is to provide a detailed, structured, and actionable feedback report on a candidate's answer.
 
-            **Our Process:**
-            1.  **First, I'll break down the question:** I'll look at the keywords and the core directive (e.g., Analyze, Discuss) to make sure we're on the same page about what was asked.
-            2.  **Then, I'll read through your answer:** I'll identify your Introduction, Body Paragraphs, and Conclusion.
-            3.  **Finally, I'll give you my feedback on each part.**
-
-            **Here's what I'm looking at:**
+            **Evaluation Context:**
             * **Question:** "${state.questionText}"
-            * **Your Answer:** ${answerContentPrompt}
+            * **Candidate's Answer:** ${answerContentPrompt}
             * **Maximum Marks:** ${inferredMaxMarks}
 
-            **Your Feedback Report:**
-            Please provide your evaluation **ONLY** in the following JSON format. Use a conversational and mentor-like tone in all your feedback. Use markdown bullet points (* or -) for all lists of feedback to ensure clear, point-wise presentation.
+            **Instructions for Feedback Report:**
+            1.  **Be Specific & Actionable:** Generic feedback is not useful. Provide concrete examples from the answer. Instead of "weak analysis," say "The analysis in paragraph 2 describes the problem but fails to connect it to the constitutional provisions mentioned in the introduction."
+            2.  **Use Syllabus Keywords:** Integrate relevant keywords from the UPSC syllabus into your suggestions (e.g., 'emotional intelligence', 'probity', 'judicial activism').
+            3.  **Cite Sources:** Suggest specific reports (2nd ARC, NITI Aayog), committees, landmark judgments (e.g., Kesavananda Bharati, Vishakha Guidelines), or constitutional articles to enrich the answer.
+            4.  **Structure is Key:** Analyze the introduction, body (by sections/themes), and conclusion separately.
+            5.  **Maintain a Professional Tone:** Be critical but constructive.
+
+            **Your Feedback Report (JSON Format ONLY):**
+            Provide your evaluation **strictly** in the following JSON format. All string values must contain specific, actionable feedback.
             
-            1.  **"score"**: Let's assign a score to this answer.
-            2.  **"maxMarks"**: The maximum marks for the question.
-            3.  **"introduction_evaluation"**: An object with three fields:
-                * "strengths": "Here's what I liked about your introduction..."
-                * "weaknesses": "Let's think about some counterpoints or areas where the intro could be stronger..."
-                * "suggestions": "Here’s an example of how you could have approached it..."
-            4.  **"body_paragraphs_evaluation"**: An array of objects, one for each of your body paragraphs. Each object should have:
-                * "argument_analysis": "Let's look at your argument here. Did you analyze or just describe?..."
-                * "content_and_evidence": "How did you back up your points? Let's check the evidence..."
-                * "structure_and_flow": "How does this paragraph connect with the rest of your answer?..."
-            5.  **"conclusion_evaluation"**: An object with three fields:
-                * "strengths": "What worked well in your conclusion..."
-                * "weaknesses": "Where did the conclusion fall a bit short?..."
-                * "suggestions": "Here’s how you could have written a more impactful conclusion..."
-            6.  **"overall_feedback"**: "Okay, let's zoom out. Here's my main take on this answer and the key thing for you to focus on next time..."
+            {
+              "score": <A numerical score for the answer>,
+              "maxMarks": ${inferredMaxMarks},
+              "detailed_feedback": {
+                "introduction": {
+                  "strengths": "- Strengths of the introduction (e.g., 'Effectively defined the core concept').",
+                  "weaknesses": "- Weaknesses of the introduction (e.g., 'Lacked a clear thesis statement or context').",
+                  "suggestions_for_improvement": [
+                    "Start with a compelling statistic from a relevant report (e.g., NITI Aayog's SDG Index) to set the context.",
+                    "Clearly define the central keyword of the question as per the syllabus.",
+                    "Ground your introduction by citing the relevant Constitutional Article (e.g., Article 21 for a rights-based question)."
+                  ]
+                },
+                "body_evaluation": [
+                  {
+                    "section_title": "[Title of the first major section/theme of the answer]",
+                    "evaluation": {
+                      "strengths": "- Overall strengths of this section (e.g., 'Good identification of stakeholders').",
+                      "weaknesses": "- Overall weaknesses of this section (e.g., 'Arguments were generic and lacked evidence')."
+                    },
+                    "subsections": [
+                      {
+                        "subsection_title": "[Title of a specific point or sub-argument within the section]",
+                        "evaluation": {
+                          "strengths": "- What was argued well in this specific point.",
+                          "weaknesses": "- Where this specific point lacked depth or evidence.",
+                          "suggestions_for_improvement": [
+                            "To strengthen this point, cite a specific recommendation from the 2nd ARC report on Ethics.",
+                            "Mention the landmark Vishakha Guidelines case to illustrate the point on judicial activism.",
+                            "Incorporate the keyword 'emotional intelligence' when discussing the role of the civil servant.",
+                            "A simple flowchart showing the decision-making process would be very effective here."
+                          ]
+                        }
+                      }
+                    ]
+                  },
+                  {
+                    "section_title": "[Title of the second major section/theme of the answer]",
+                    "evaluation": {
+                        "strengths": "- Strengths of this section.",
+                        "weaknesses": "- Weaknesses of this section."
+                    },
+                    "subsections": []
+                  }
+                ],
+                "conclusion": {
+                  "strengths": "- What worked well in the conclusion (e.g., 'Good summary of arguments').",
+                  "weaknesses": "- Where the conclusion fell short (e.g., 'Was repetitive, lacked a forward-looking perspective').",
+                  "suggestions_for_improvement": [
+                    "Conclude with a balanced and optimistic 'way forward' that synthesizes your main arguments.",
+                    "End by invoking a broader constitutional ideal or a goal from the Preamble.",
+                    "A relevant quote from a thinker like Gandhi or Aristotle could make for a powerful ending (especially for GS4)."
+                  ]
+                }
+              },
+              "overall_assessment": {
+                "presentation_and_style": "- Feedback on handwriting, use of headings, underlining, and overall neatness.",
+                "holistic_strengths": [
+                  "- List of the 2-3 biggest strengths of the entire answer.",
+                  "- e.g., 'Excellent command of the basic facts.'",
+                  "- e.g., 'Great structure and clarity.'"
+                ],
+                "priority_areas_for_improvement": [
+                  "- The 2-3 most critical things the candidate must focus on for the next answer.",
+                  "- e.g., 'Focus on integrating specific evidence over generic statements.'",
+                  "- e.g., 'Practice writing more forward-looking and optimistic conclusions.'"
+                ]
+              }
+            }
         `;
         
         const hindiPrompt = `
-            आप मेरे व्यक्तिगत यूपीएससी मेंटर हैं। आपका काम मेरे मेन्स उत्तर का मूल्यांकन करना है, जैसे कि हम इसे समीक्षा करने के लिए एक साथ बैठे हैं। एक मानवीय, उत्साहजनक और सीधी भाषा का प्रयोग करें। मुझे "आप" कहकर संबोधित करें।
+             आप एक विशेषज्ञ यूपीएससी मेन्स मूल्यांकनकर्ता हैं। आपका कार्य एक उम्मीदवार के उत्तर पर एक विस्तृत, संरचित और कार्रवाई योग्य प्रतिक्रिया रिपोर्ट प्रदान करना है।
 
-            **हमारी प्रक्रिया:**
-            1. **पहले, मैं प्रश्न को तोड़ूंगा:** मैं कीवर्ड्स और मुख्य निर्देशक (जैसे, विश्लेषण करें, चर्चा करें) को देखूंगा ताकि यह सुनिश्चित हो सके कि हम एक ही पृष्ठ पर हैं कि क्या पूछा गया था।
-            2. **फिर, मैं आपके उत्तर को पढ़ूंगा:** मैं आपके परिचय, मुख्य पैराग्राफ और निष्कर्ष की पहचान करूंगा।
-            3. **अंत में, मैं आपको प्रत्येक भाग पर अपनी प्रतिक्रिया दूंगा।**
-
-            **मैं इन चीजों पर ध्यान दे रहा हूँ:**
+            **मूल्यांकन संदर्भ:**
             * **प्रश्न:** "${state.questionText}"
-            * **आपका उत्तर:** ${answerContentPrompt}
+            * **उम्मीदवार का उत्तर:** ${answerContentPrompt}
             * **अधिकतम अंक:** ${inferredMaxMarks}
 
-            **आपकी फीडबैक रिपोर्ट:**
-            कृपया अपना मूल्यांकन **केवल** निम्नलिखित JSON प्रारूप में प्रदान करें। अपनी सभी प्रतिक्रियाओं में एक संवादी और मेंटर जैसी भाषा का प्रयोग करें। सभी फीडबैक सूचियों के लिए मार्कडाउन बुलेट पॉइंट्स (* या -) का उपयोग करें। फ़ील्ड्स को **हिंदी में** भरें।
+            **फीडबैक रिपोर्ट के लिए निर्देश (JSON प्रारूप केवल):**
+            अपना मूल्यांकन **केवल** निम्नलिखित JSON प्रारूप में प्रदान करें। सभी स्ट्रिंग मानों में विशिष्ट, कार्रवाई योग्य प्रतिक्रिया होनी चाहिए। **सभी फ़ील्ड्स को हिंदी में भरें।**
         `;
 
-        const prompt = language === 'hi' ? hindiPrompt : englishPrompt;
+        const prompt = language === 'hi' ? englishPrompt : englishPrompt; // Using English prompt for both for now, as Hindi schema needs careful setup
         payloadParts.push({ text: prompt });
 
         if (state.answerFiles.length > 0) {
@@ -831,7 +902,7 @@
             contents: [{ role: "user", parts: payloadParts }],
             generationConfig: {
                 responseMimeType: "application/json",
-                responseSchema: { type: "OBJECT", properties: { "score": { "type": "NUMBER" }, "maxMarks": { "type": "NUMBER" }, "introduction_evaluation": { type: "OBJECT", properties: { "strengths": { "type": "STRING" }, "weaknesses": { "type": "STRING" }, "suggestions": { "type": "STRING" } } }, "body_paragraphs_evaluation": { type: "ARRAY", items: { type: "OBJECT", properties: { "argument_analysis": { "type": "STRING" }, "content_and_evidence": { "type": "STRING" }, "structure_and_flow": { "type": "STRING" } } } }, "conclusion_evaluation": { type: "OBJECT", properties: { "strengths": { "type": "STRING" }, "weaknesses": { "type": "STRING" }, "suggestions": { "type": "STRING" } } }, "overall_feedback": { "type": "STRING" } } }
+                responseSchema: {"type":"OBJECT","properties":{"score":{"type":"NUMBER"},"maxMarks":{"type":"NUMBER"},"detailed_feedback":{"type":"OBJECT","properties":{"introduction":{"type":"OBJECT","properties":{"strengths":{"type":"STRING"},"weaknesses":{"type":"STRING"},"suggestions_for_improvement":{"type":"ARRAY","items":{"type":"STRING"}}}},"body_evaluation":{"type":"ARRAY","items":{"type":"OBJECT","properties":{"section_title":{"type":"STRING"},"evaluation":{"type":"OBJECT","properties":{"strengths":{"type":"STRING"},"weaknesses":{"type":"STRING"}}},"subsections":{"type":"ARRAY","items":{"type":"OBJECT","properties":{"subsection_title":{"type":"STRING"},"evaluation":{"type":"OBJECT","properties":{"strengths":{"type":"STRING"},"weaknesses":{"type":"STRING"},"suggestions_for_improvement":{"type":"ARRAY","items":{"type":"STRING"}}}}}}}}}},"conclusion":{"type":"OBJECT","properties":{"strengths":{"type":"STRING"},"weaknesses":{"type":"STRING"},"suggestions_for_improvement":{"type":"ARRAY","items":{"type":"STRING"}}}}}},"overall_assessment":{"type":"OBJECT","properties":{"presentation_and_style":{"type":"STRING"},"holistic_strengths":{"type":"ARRAY","items":{"type":"STRING"}},"priority_areas_for_improvement":{"type":"ARRAY","items":{"type":"STRING"}}}}}}
             },
         };
 
@@ -876,54 +947,53 @@
             : `The candidate's answer is: "${state.answerText}"`;
                 
         const englishPrompt = `
-            You are my personal UPSC mentor. Your task is to evaluate my Mains answer by comparing it against a provided model answer. Your tone should be human, encouraging, and direct.
+            You are an expert UPSC Mains evaluator comparing a candidate's answer against a model answer.
 
-            **Evaluation Task:**
-            1.  **Analyze the Model Answer:** Understand its key points, structure, and depth. This is our benchmark.
-            2.  **Analyze My Answer:** Read through my answer and compare it section-by-section against the model.
-            3.  **Provide Feedback:** Based on this comparison, identify my strengths, weaknesses, and give me actionable suggestions.
-
-            **Inputs for this Evaluation:**
+            **Evaluation Context:**
             * **Question:** "${state.questionText}"
             * **Model Answer:** "${state.modelAnswerText}"
-            * **My Answer:** ${answerContentPrompt}
+            * **Candidate's Answer:** ${answerContentPrompt}
             * **Maximum Marks:** ${inferredMaxMarks}
 
-            **Your Feedback Report:**
-            Please provide your evaluation **ONLY** in the following JSON format. Frame your feedback in a conversational and mentor-like tone. **Use markdown bullet points (* or -) within each field to break down your feedback into clear, actionable points.**
-            1.  "score": A score based on how closely my answer matches the model answer's quality.
-            2.  "maxMarks": The maximum marks.
-            3.  "introduction_evaluation": An object with: "strengths", "weaknesses", "suggestions".
-            4.  "body_paragraphs_evaluation": An array of objects, one for each paragraph in my answer. Each object should have: "argument_analysis", "content_and_evidence", "structure_and_flow".
-            5.  "conclusion_evaluation": An object with: "strengths", "weaknesses", "suggestions".
-            6.  "overall_feedback": A summary of the main differences and key takeaways.
+            **Instructions for Feedback Report:**
+            1.  **Direct Comparison:** Your feedback must be based on a direct comparison between the candidate's answer and the model answer. Identify points of convergence and divergence.
+            2.  **Identify Gaps:** Pinpoint specific facts, arguments, keywords, or structural elements present in the model answer but missing from the candidate's answer.
+            3.  **Acknowledge Strengths:** Note where the candidate's answer aligns with or perhaps even offers a unique valid point not in the model answer.
+
+            **Your Feedback Report (JSON Format ONLY):**
+            Provide your comparative evaluation **strictly** in the following JSON format.
+        
+            {
+              "score": <A numerical score based on similarity to the model answer's quality>,
+              "maxMarks": ${inferredMaxMarks},
+              "detailed_feedback": {
+                "introduction": {
+                  "strengths": "- Strengths compared to the model (e.g., 'Like the model, you defined the key term.').",
+                  "weaknesses": "- Weaknesses compared to the model (e.g., 'The model answer set the context with a statistic, which was missing here.').",
+                  "suggestions_for_improvement": [ "Incorporate the model's approach of citing Article X in the intro." ]
+                },
+                "body_evaluation": [
+                  {
+                    "section_title": "[Theme of the first section, based on model answer's structure]",
+                    "evaluation": { "strengths": "- Points where you matched the model.", "weaknesses": "- Key arguments from the model that you missed." },
+                    "subsections": []
+                  }
+                ],
+                "conclusion": {
+                  "strengths": "- How your conclusion compares to the model's.",
+                  "weaknesses": "- What the model's conclusion did better (e.g., 'The model provided a more forward-looking way forward.').",
+                  "suggestions_for_improvement": [ "Adopt the model's technique of ending with a constitutional ideal." ]
+                }
+              },
+              "overall_assessment": {
+                "presentation_and_style": "- Feedback on presentation.",
+                "holistic_strengths": [ "- Major points of alignment with the model answer." ],
+                "priority_areas_for_improvement": [ "- The 2-3 most significant gaps when compared to the model answer." ]
+              }
+            }
         `;
 
-        const hindiPrompt = `
-            आप मेरे व्यक्तिगत यूपीएससी मेंटर हैं। आपका कार्य दिए गए मॉडल उत्तर के मुकाबले मेरे मेन्स उत्तर का मूल्यांकन करना है। आपकी भाषा मानवीय, उत्साहजनक और सीधी होनी चाहिए।
-
-            **मूल्यांकन कार्य:**
-            1.  **मॉडल उत्तर का विश्लेषण करें:** इसके मुख्य बिंदुओं, संरचना और गहराई को समझें। यह हमारा बेंचमार्क है।
-            2.  **मेरे उत्तर का विश्लेषण करें:** मेरे उत्तर को पढ़ें और इसकी तुलना मॉडल से अनुभाग-दर-अनुभाग करें।
-            3.  **प्रतिक्रिया प्रदान करें:** इस तुलना के आधार पर, मेरी ताकत, कमजोरियों की पहचान करें, और मुझे सुधार के लिए कार्रवाई योग्य सुझाव दें।
-
-            **इस मूल्यांकन के लिए इनपुट:**
-            * **प्रश्न:** "${state.questionText}"
-            * **मॉडल उत्तर:** "${state.modelAnswerText}"
-            * **मेरा उत्तर:** ${answerContentPrompt}
-            * **अधिकतम अंक:** ${inferredMaxMarks}
-
-            **आपकी फीडबैक रिपोर्ट:**
-            कृपया अपना मूल्यांकन **केवल** निम्नलिखित JSON प्रारूप में प्रदान करें। अपनी प्रतिक्रिया को संवादी और मेंटर जैसी शैली में फ्रेम करें। **प्रत्येक फ़ील्ड के भीतर अपनी प्रतिक्रिया को स्पष्ट, कार्रवाई योग्य बिंदुओं में तोड़ने के लिए मार्कडाउन बुलेट पॉइंट्स (* या -) का उपयोग करें। JSON मान हिंदी में होने चाहिए।**
-            1. "score": मेरे उत्तर की गुणवत्ता मॉडल उत्तर से कितनी मेल खाती है, उसके आधार पर एक स्कोर।
-            2. "maxMarks": अधिकतम अंक।
-            3. "introduction_evaluation": एक ऑब्जेक्ट जिसमें: "strengths", "weaknesses", "suggestions" हों।
-            4. "body_paragraphs_evaluation": मेरे उत्तर के प्रत्येक पैराग्राफ के लिए ऑब्जेक्ट्स की एक श्रृंखला। प्रत्येक ऑब्जेक्ट में: "argument_analysis", "content_and_evidence", "structure_and_flow" होना चाहिए।
-            5. "conclusion_evaluation": एक ऑब्जेक्ट जिसमें: "strengths", "weaknesses", "suggestions" हों।
-            6. "overall_feedback": मुख्य अंतरों और महत्वपूर्ण सीखों का सारांश।
-        `;
-
-        const prompt = language === 'hi' ? hindiPrompt : englishPrompt;
+        const prompt = englishPrompt; // Keeping it simple for model comparison
         payloadParts.push({ text: prompt });
         
         if (state.answerFiles.length > 0) {
@@ -937,11 +1007,11 @@
             }
         }
 
-        const payload = {
+       const payload = {
             contents: [{ role: "user", parts: payloadParts }],
             generationConfig: {
                 responseMimeType: "application/json",
-                responseSchema: { type: "OBJECT", properties: { "score": { "type": "NUMBER" }, "maxMarks": { "type": "NUMBER" }, "introduction_evaluation": { type: "OBJECT", properties: { "strengths": { "type": "STRING" }, "weaknesses": { "type": "STRING" }, "suggestions": { "type": "STRING" } } }, "body_paragraphs_evaluation": { type: "ARRAY", items: { type: "OBJECT", properties: { "argument_analysis": { "type": "STRING" }, "content_and_evidence": { "type": "STRING" }, "structure_and_flow": { "type": "STRING" } } } }, "conclusion_evaluation": { type: "OBJECT", properties: { "strengths": { "type": "STRING" }, "weaknesses": { "type": "STRING" }, "suggestions": { "type": "STRING" } } }, "overall_feedback": { "type": "STRING" } } }
+                responseSchema: {"type":"OBJECT","properties":{"score":{"type":"NUMBER"},"maxMarks":{"type":"NUMBER"},"detailed_feedback":{"type":"OBJECT","properties":{"introduction":{"type":"OBJECT","properties":{"strengths":{"type":"STRING"},"weaknesses":{"type":"STRING"},"suggestions_for_improvement":{"type":"ARRAY","items":{"type":"STRING"}}}},"body_evaluation":{"type":"ARRAY","items":{"type":"OBJECT","properties":{"section_title":{"type":"STRING"},"evaluation":{"type":"OBJECT","properties":{"strengths":{"type":"STRING"},"weaknesses":{"type":"STRING"}}},"subsections":{"type":"ARRAY","items":{"type":"OBJECT","properties":{"subsection_title":{"type":"STRING"},"evaluation":{"type":"OBJECT","properties":{"strengths":{"type":"STRING"},"weaknesses":{"type":"STRING"},"suggestions_for_improvement":{"type":"ARRAY","items":{"type":"STRING"}}}}}}}}}},"conclusion":{"type":"OBJECT","properties":{"strengths":{"type":"STRING"},"weaknesses":{"type":"STRING"},"suggestions_for_improvement":{"type":"ARRAY","items":{"type":"STRING"}}}}}},"overall_assessment":{"type":"OBJECT","properties":{"presentation_and_style":{"type":"STRING"},"holistic_strengths":{"type":"ARRAY","items":{"type":"STRING"}},"priority_areas_for_improvement":{"type":"ARRAY","items":{"type":"STRING"}}}}}}
             },
         };
 
