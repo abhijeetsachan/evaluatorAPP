@@ -939,10 +939,40 @@
 
         const { inferredWordLimit } = getInferredLimits(state.questionText);
         const language = detectLanguage(state.questionText);
-        const totalTargetWords = inferredWordLimit === '150 words' ? 200 : 300;
+        
+        // New logic for extended word limits
+        let targetWordCountText = '';
+        let targetWordCountTextHindi = '';
 
-        const hindiPrompt = `आप एक यूपीएससी विषय विशेषज्ञ हैं। निम्नलिखित प्रश्न के लिए एक व्यापक, सुव्यवस्थित मॉडल उत्तर लिखें। **निर्देश:** - लगभग ${inferredWordLimit === '150 words' ? '१५० शब्दों' : '२५० शब्दों'} की शब्द सीमा का सख्ती से पालन करें। कुल शब्द संख्या ${totalTargetWords} शब्दों से अधिक नहीं होनी चाहिए। - उत्तर को एक स्पष्ट परिचय, मुख्य भाग और निष्कर्ष के साथ संरचित करें। - स्वरूपण के लिए मार्कडाउन का उपयोग करें: मुख्य शीर्षकों के लिए '##' और उप-शीर्षकों के लिए '###'। सूचियों के लिए बुलेट पॉइंट ('* ') का उपयोग करें। - सुनिश्चित करें कि सामग्री सटीक, प्रासंगिक है और प्रश्न के सभी पहलुओं को शामिल करती है। - लहजा औपचारिक और अकादमिक होना चाहिए। **प्रश्न:** "${state.questionText}"`;
-        const englishPrompt = `You are a UPSC subject matter expert. Write a comprehensive, well-structured model answer for the following question. **Instructions:** - Adhere strictly to a word limit of approximately ${inferredWordLimit}. The total word count should not exceed ${totalTargetWords} words. - Structure the answer with a clear Introduction, Body, and Conclusion. - Use Markdown for formatting: '##' for main headings and '###' for subheadings. Use bullet points ('* ') for lists. - Ensure the content is accurate, relevant, and covers all aspects of the question. - The tone should be formal and academic. **Question:** "${state.questionText}"`;
+        if (inferredWordLimit === '150 words') {
+            targetWordCountText = '450-500 words';
+            targetWordCountTextHindi = '४५०-५०० शब्दों';
+        } else { // Assumes '250 words' or default
+            targetWordCountText = '650-700 words';
+            targetWordCountTextHindi = '६५०-७०० शब्दों';
+        }
+
+        const hindiPrompt = `
+            You are a UPSC subject matter expert. For the purpose of creating a detailed study resource, write a comprehensive, well-structured model answer for the following question that is significantly more detailed than a standard exam answer.
+            **Instructions:**
+            - Your answer should be in the range of ${targetWordCountTextHindi}. This is intentionally longer than the typical exam limit to provide in-depth analysis.
+            - Structure the answer with a clear Introduction, Body, and Conclusion.
+            - Use Markdown for formatting: '##' for main headings and '###' for subheadings. Use bullet points ('* ') for lists.
+            - Ensure the content is accurate, relevant, and covers all aspects of the question in detail, providing ample examples, data, and citations where appropriate.
+            - The tone should be formal and academic.
+            **Question:** "${state.questionText}"
+        `;
+
+        const englishPrompt = `
+            You are a UPSC subject matter expert. For the purpose of creating a detailed study resource, write a comprehensive, well-structured model answer for the following question that is significantly more detailed than a standard exam answer.
+            **Instructions:**
+            - Your answer should be in the range of ${targetWordCountText}. This is intentionally longer than the typical exam limit to provide in-depth analysis.
+            - Structure the answer with a clear Introduction, Body, and Conclusion.
+            - Use Markdown for formatting: '##' for main headings and '###' for subheadings. Use bullet points ('* ') for lists.
+            - Ensure the content is accurate, relevant, and covers all aspects of the question in detail, providing ample examples, data, and citations where appropriate.
+            - The tone should be formal and academic.
+            **Question:** "${state.questionText}"
+        `;
         
         const prompt = language === 'hi' ? hindiPrompt : englishPrompt;
         const payload = { contents: [{ role: "user", parts: [{ text: prompt }] }] };
