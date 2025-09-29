@@ -368,12 +368,12 @@
     (function() {
         /**
          * IMPORTANT: SECURITY & API USAGE
-         * This is a client-side template. In a production environment, never expose your API key directly.
-         * All API calls to generative models should be routed through a secure backend proxy.
-         * The `PROXY_API_URL` is a placeholder for your own backend endpoint.
-         * Your backend will securely attach the API key and forward the request to the Google AI API.
+         * This application is now configured to use a backend proxy.
+         * All API calls are sent to the `PROXY_API_URL` endpoint.
+         * Your backend server at that endpoint is responsible for securely attaching the API key
+         * and forwarding the request to the Google AI API.
          */
-        const PROXY_API_URL = '/api/gemini'; // Replace with your actual backend proxy URL.
+        const PROXY_API_URL = '/api/proxy'; // The proxy endpoint from the original code.
 
         // --- 1. STATE MANAGEMENT ---
         // A single source of truth for the application's state.
@@ -635,7 +635,7 @@
                         }]
                     };
                     
-                    const result = await this._fetchFromProxy({ mode: 'ocr', payload });
+                    const result = await this._fetchFromProxy({ mode: 'ocr', payload: payload });
                     const text = result.candidates?.[0]?.content?.parts?.[0]?.text;
                     if (!text) throw new Error('Could not extract text from file.');
                     return text;
@@ -647,14 +647,14 @@
                     }
                     const { prompt, payloadParts } = await this._buildEvaluationPayload('ai');
                     const systemInstruction = { parts: [{ text: "You are a helpful and encouraging UPSC exam mentor. Address the user directly as 'you' and provide constructive, detailed feedback in a conversational tone. Never refer to the user as 'the candidate'." }]};
-                    return await this._callEvaluationApi(prompt, systemInstruction, payloadParts);
+                    return await this._callEvaluationApiWithSchema(prompt, systemInstruction, payloadParts);
                 },
 
                 async evaluateWithModelAnswer() {
                      if (!state.modelAnswerText.trim()) throw new Error('Please provide the model answer.');
                      const { prompt, payloadParts } = await this._buildEvaluationPayload('model');
                      const systemInstruction = { parts: [{ text: "You are an analytical UPSC exam mentor. Compare the user's answer against the provided model answer meticulously. Address the user directly as 'you' and provide feedback based on the comparison." }]};
-                     return await this._callEvaluationApi(prompt, systemInstruction, payloadParts);
+                     return await this._callEvaluationApiWithSchema(prompt, systemInstruction, payloadParts);
                 },
 
                 async generateFullModelAnswer() {
@@ -669,7 +669,7 @@
                     const systemInstruction = { parts: [{ text: `You are a UPSC subject matter expert creating a detailed study resource in ${isHindi ? 'Hindi' : 'English'}.` }]};
                     const payload = { contents: [{ role: "user", parts: [{ text: prompt }] }], systemInstruction };
                     
-                    const result = await this._fetchFromProxy({ mode: 'generate', payload });
+                    const result = await this._fetchFromProxy({ mode: 'generate', payload: payload });
                     const text = result.candidates?.[0]?.content?.parts?.[0]?.text;
                     if (!text) throw new Error('Failed to generate model answer.');
                     return text;
@@ -706,7 +706,7 @@
                     return { prompt, payloadParts };
                 },
 
-                async _callEvaluationApi(prompt, systemInstruction, payloadParts) {
+                async _callEvaluationApiWithSchema(prompt, systemInstruction, payloadParts) {
                      const payload = {
                         contents: [{ role: "user", parts: payloadParts }],
                         systemInstruction,
@@ -715,7 +715,7 @@
                             responseSchema: { type: "OBJECT", properties: { "score": { "type": "NUMBER" }, "maxMarks": { "type": "NUMBER" }, "introduction_evaluation": { type: "OBJECT", properties: { "strengths": { "type": "STRING" }, "weaknesses": { "type": "STRING" }, "suggestions": { "type": "STRING" } } }, "body_paragraphs_evaluation": { type: "ARRAY", items: { type: "OBJECT", properties: { "paragraph_start": { "type": "STRING" }, "strengths": { "type": "STRING" }, "weaknesses": { "type": "STRING" }, "suggestions_for_improvement": { "type": "STRING" } } } }, "conclusion_evaluation": { type: "OBJECT", properties: { "strengths": { "type": "STRING" }, "weaknesses": { "type": "STRING" }, "suggestions": { "type": "STRING" } } }, "overall_feedback": { "type": "STRING" } } }
                         },
                     };
-                    const result = await this._fetchFromProxy({ mode: 'evaluate', payload });
+                    const result = await this._fetchFromProxy({ mode: 'evaluate', payload: payload });
                     const jsonText = result.candidates?.[0]?.content?.parts?.[0]?.text;
                     if (!jsonText) return null;
                     return JSON.parse(jsonText);
@@ -1039,4 +1039,5 @@
 
 </body>
 </html>
+
 
