@@ -184,12 +184,12 @@
             opacity: 1 !important; /* Override opacity:0 to make looping visible */
         }
         .inline-loader span:not(.ai) {
-             /* The slideUp animation now repeats up and down, combined with the glow */
-             animation: slideUp 1s cubic-bezier(0.4, 0, 0.2, 1) infinite alternate, pulseGlowBlack 2.2s ease-in-out infinite alternate;
+             /* The non-AI letters now loop their slideUp animation, matching the preloader's style without the extra glow */
+             animation: slideUp 0.8s cubic-bezier(0.23, 1, 0.32, 1) infinite alternate;
         }
         .inline-loader span.ai {
-            /* The aiReveal animation now repeats, filling and emptying, combined with the glow */
-            animation: aiReveal 1.2s cubic-bezier(0.4, 0, 0.2, 1) infinite alternate, pulseGlow 2s ease-in-out infinite alternate;
+            /* The AI letters loop their reveal and glow, matching the preloader's animation style */
+            animation: aiReveal 1.2s cubic-bezier(0.23, 1, 0.32, 1) infinite alternate, pulseGlow 2s ease-in-out infinite alternate;
         }
 
         /* Stagger the looping animation for a wave effect */
@@ -1039,5 +1039,6 @@
 
 </body>
 </html>
+
 
 
