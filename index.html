@@ -239,7 +239,7 @@
                     </div>
                 </h1>
                 <button onclick="clearAll()" class="flex items-center gap-2 text-sm font-medium text-slate-600 hover:text-blue-600 transition-all duration-300 transform hover:scale-105">
-                    <svg class="w-4 h-4" xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6h18"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6"/><path d="M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/><line x1="10" x2="10" y1="11" y2="17"/><line x1="14" x2="14" y1="11" y2="17"/></svg>
+                    <svg class="w-4 h-4" xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6h18"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6"/><path d="M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/><line x1="10" x2="10" y1="11" y2="17"/><line x1="14" x2="14" y1="11" y2="17"/></svg>
                     Clear All
                 </button>
             </div>
@@ -550,7 +550,7 @@
             const result = state.evaluationResult;
             let bodyHtml = (result.body_paragraphs_evaluation || []).map((para, index) => `
                 <div class="pt-4">
-                    <h5 class="font-semibold text-slate-700">Paragraph ${index + 1}:</h5>
+                    <h5 class="font-semibold text-slate-700">Paragraph ${index + 1}: <span class="text-slate-500 font-normal italic">"${para.paragraph_start || ''}..."</span></h5>
                     <div class="prose prose-sm max-w-none text-slate-600 mt-2 space-y-3">
                         <div><p class="font-semibold text-slate-600">Argument Analysis:</p>${renderMarkdown(para.argument_analysis)}</div>
                         <div><p class="font-semibold text-slate-600">Content & Evidence:</p>${renderMarkdown(para.content_and_evidence)}</div>
@@ -817,8 +817,61 @@
             ? "The candidate's answer is in the following images. Please analyze the handwritten text and any diagrams directly from these images."
             : `The candidate's answer is: "${state.answerText}"`;
 
-        const englishPrompt = `You are my personal UPSC mentor. Your task is to evaluate my Mains answer as if we're sitting down together to review it. Use a human, encouraging, and direct tone. Address me as "you". **Our Process:** 1. **First, I'll break down the question:** I'll look at the keywords and the core directive (e.g., Analyze, Discuss) to make sure we're on the same page about what was asked. 2. **Then, I'll read through your answer:** I'll identify your Introduction, Body Paragraphs, and Conclusion. 3. **Finally, I'll give you my feedback on each part.** **Here's what I'm looking at:** * **Question:** "${state.questionText}" * **Your Answer:** ${answerContentPrompt} * **Maximum Marks:** ${inferredMaxMarks} **Your Feedback Report:** Please provide your evaluation **ONLY** in the following JSON format. Use a conversational and mentor-like tone in all your feedback. Use markdown bullet points (* or -) for all lists of feedback to ensure clear, point-wise presentation. 1. **"score"**: Let's assign a score to this answer. 2. **"maxMarks"**: The maximum marks for the question. 3. **"introduction_evaluation"**: An object with three fields: * "strengths": "Here's what I liked about your introduction..." * "weaknesses": "Let's think about some counterpoints or areas where the intro could be stronger..." * "suggestions": "Here’s an example of how you could have approached it..." 4. **"body_paragraphs_evaluation"**: An array of objects, one for each of your body paragraphs. Each object should have: * "argument_analysis": "Let's look at your argument here. Did you analyze or just describe?..." * "content_and_evidence": "How did you back up your points? Let's check the evidence..." * "structure_and_flow": "How does this paragraph connect with the rest of your answer?..." 5. **"conclusion_evaluation"**: An object with three fields: * "strengths": "What worked well in your conclusion..." * "weaknesses": "Where did the conclusion fall a bit short?..." * "suggestions": "Here’s how you could have written a more impactful conclusion..." 6. **"overall_feedback"**: "Okay, let's zoom out. Here's my main take on this answer and the key thing for you to focus on next time..."`;
-        const hindiPrompt = `आप मेरे व्यक्तिगत यूपीएससी मेंटर हैं। आपका काम मेरे मेन्स उत्तर का मूल्यांकन करना है, जैसे कि हम इसे समीक्षा करने के लिए एक साथ बैठे हैं। एक मानवीय, उत्साहजनक और सीधी भाषा का प्रयोग करें। मुझे "आप" कहकर संबोधित करें। **हमारी प्रक्रिया:** 1. **पहले, मैं प्रश्न को तोड़ूंगा:** मैं कीवर्ड्स और मुख्य निर्देशक (जैसे, विश्लेषण करें, चर्चा करें) को देखूंगा ताकि यह सुनिश्चित हो सके कि हम एक ही पृष्ठ पर हैं कि क्या पूछा गया था। 2. **फिर, मैं आपके उत्तर को पढ़ूंगा:** मैं आपके परिचय, मुख्य पैराग्राफ और निष्कर्ष की पहचान करूंगा। 3. **अंत में, मैं आपको प्रत्येक भाग पर अपनी प्रतिक्रिया दूंगा।** **मैं इन चीजों पर ध्यान दे रहा हूँ:** * **प्रश्न:** "${state.questionText}" * **आपका उत्तर:** ${answerContentPrompt} * **अधिकतम अंक:** ${inferredMaxMarks} **आपकी फीडबैक रिपोर्ट:** कृपया अपना मूल्यांकन **केवल** निम्नलिखित JSON प्रारूप में प्रदान करें। अपनी सभी प्रतिक्रियाओं में एक संवादी और मेंटर जैसी भाषा का प्रयोग करें। सभी फीडबैक सूचियों के लिए मार्कडाउन बुलेट पॉइंट्स (* या -) का उपयोग करें। फ़ील्ड्स को **हिंदी में** भरें।`;
+        const englishPrompt = `
+            You are my personal UPSC mentor. Your task is to evaluate my Mains answer as if we're sitting down together to review it. Use a human, encouraging, and direct tone. Address me as "you".
+
+            **Our Process:**
+            1.  **First, I'll break down the question:** I'll look at the keywords and the core directive (e.g., Analyze, Discuss) to make sure we're on the same page about what was asked.
+            2.  **Then, I'll read through your answer:** I'll identify your Introduction, Body Paragraphs, and Conclusion.
+            3.  **Finally, I'll give you my feedback on each part.**
+
+            **Here's what I'm looking at:**
+            * **Question:** "${state.questionText}"
+            * **Your Answer:** ${answerContentPrompt}
+            * **Maximum Marks:** ${inferredMaxMarks}
+
+            **Your Feedback Report:**
+            Please provide your evaluation **ONLY** in the following JSON format. Use a conversational and mentor-like tone in all your feedback. Use markdown bullet points (* or -) for all lists of feedback to ensure clear, point-wise presentation.
+            
+            1.  **"score"**: Let's assign a score to this answer.
+            2.  **"maxMarks"**: The maximum marks for the question.
+            3.  **"introduction_evaluation"**: An object with three fields:
+                * "strengths": "Here's what I liked about your introduction..."
+                * "weaknesses": "Let's think about some counterpoints or areas where the intro could be stronger..."
+                * "suggestions": "Here’s an example of how you could have approached it..."
+            4.  **"body_paragraphs_evaluation"**: An array of objects, one for each of your body paragraphs/sections. First, deconstruct the answer's body into logical paragraphs or subsections. For each one, create an object with:
+                * "paragraph_start": "The first 5-7 words of the paragraph being evaluated (e.g., 'Historically, the Indian economy...'). This is crucial for me to identify which part you are talking about."
+                * "argument_analysis": "Let's look at your argument here. Did you analyze or just describe?..."
+                * "content_and_evidence": "How did you back up your points? Let's check the evidence..."
+                * "structure_and_flow": "How does this paragraph connect with the rest of your answer?..."
+            5.  **"conclusion_evaluation"**: An object with three fields:
+                * "strengths": "What worked well in your conclusion..."
+                * "weaknesses": "Where did the conclusion fall a bit short?..."
+                * "suggestions": "Here’s how you could have written a more impactful conclusion..."
+            6.  **"overall_feedback"**: "Okay, let's zoom out. Here's my main take on this answer and the key thing for you to focus on next time..."
+        `;
+        
+        const hindiPrompt = `
+            आप मेरे व्यक्तिगत यूपीएससी मेंटर हैं। आपका काम मेरे मेन्स उत्तर का मूल्यांकन करना है, जैसे कि हम इसे समीक्षा करने के लिए एक साथ बैठे हैं। एक मानवीय, उत्साहजनक और सीधी भाषा का प्रयोग करें। मुझे "आप" कहकर संबोधित करें।
+
+            **हमारी प्रक्रिया:**
+            1. **पहले, मैं प्रश्न को तोड़ूंगा:** मैं कीवर्ड्स और मुख्य निर्देशक (जैसे, विश्लेषण करें, चर्चा करें) को देखूंगा ताकि यह सुनिश्चित हो सके कि हम एक ही पृष्ठ पर हैं कि क्या पूछा गया था।
+            2. **फिर, मैं आपके उत्तर को पढ़ूंगा:** मैं आपके परिचय, मुख्य पैराग्राफ और निष्कर्ष की पहचान करूंगा।
+            3. **अंत में, मैं आपको प्रत्येक भाग पर अपनी प्रतिक्रिया दूंगा।**
+
+            **मैं इन चीजों पर ध्यान दे रहा हूँ:**
+            * **प्रश्न:** "${state.questionText}"
+            * **आपका उत्तर:** ${answerContentPrompt}
+            * **अधिकतम अंक:** ${inferredMaxMarks}
+
+            **आपकी फीडबैक रिपोर्ट:**
+            कृपया अपना मूल्यांकन **केवल** निम्नलिखित JSON प्रारूप में प्रदान करें। अपनी सभी प्रतिक्रियाओं में एक संवादी और मेंटर जैसी भाषा का प्रयोग करें। सभी फीडबैक सूचियों के लिए मार्कडाउन बुलेट पॉइंट्स (* या -) का उपयोग करें। फ़ील्ड्स को **हिंदी में** भरें।
+            4. **"body_paragraphs_evaluation"**: आपके उत्तर के प्रत्येक पैराग्राफ/खंड के लिए ऑब्जेक्ट्स की एक श्रृंखला। सबसे पहले, उत्तर के मुख्य भाग को तार्किक पैराग्राफ या उप-भागों में तोड़ें। प्रत्येक के लिए, एक ऑब्जेक्ट बनाएं जिसमें शामिल हो:
+                * "paragraph_start": "मूल्यांकन किए जा रहे पैराग्राफ के पहले 5-7 शब्द (जैसे, 'ऐतिहासिक रूप से, भारतीय अर्थव्यवस्था...')। यह मेरे लिए यह पहचानने के लिए महत्वपूर्ण है कि आप किस हिस्से के बारे में बात कर रहे हैं।"
+                * "argument_analysis": "आइए यहां आपके तर्क को देखें। क्या आपने विश्लेषण किया या सिर्फ वर्णन किया?..."
+                * "content_and_evidence": "आपने अपने बिंदुओं का समर्थन कैसे किया? आइए सबूत देखें..."
+                * "structure_and_flow": "यह पैराग्राफ आपके बाकी उत्तर से कैसे जुड़ता है?..."
+        `;
 
         const prompt = language === 'hi' ? hindiPrompt : englishPrompt;
         payloadParts.push({ text: prompt });
@@ -840,7 +893,7 @@
             contents: [{ role: "user", parts: payloadParts }],
             generationConfig: {
                 responseMimeType: "application/json",
-                responseSchema: { type: "OBJECT", properties: { "score": { "type": "NUMBER" }, "maxMarks": { "type": "NUMBER" }, "introduction_evaluation": { type: "OBJECT", properties: { "strengths": { "type": "STRING" }, "weaknesses": { "type": "STRING" }, "suggestions": { "type": "STRING" } } }, "body_paragraphs_evaluation": { type: "ARRAY", items: { type: "OBJECT", properties: { "argument_analysis": { "type": "STRING" }, "content_and_evidence": { "type": "STRING" }, "structure_and_flow": { "type": "STRING" } } } }, "conclusion_evaluation": { type: "OBJECT", properties: { "strengths": { "type": "STRING" }, "weaknesses": { "type": "STRING" }, "suggestions": { "type": "STRING" } } }, "overall_feedback": { "type": "STRING" } } }
+                responseSchema: { type: "OBJECT", properties: { "score": { "type": "NUMBER" }, "maxMarks": { "type": "NUMBER" }, "introduction_evaluation": { type: "OBJECT", properties: { "strengths": { "type": "STRING" }, "weaknesses": { "type": "STRING" }, "suggestions": { "type": "STRING" } } }, "body_paragraphs_evaluation": { type: "ARRAY", items: { type: "OBJECT", properties: { "paragraph_start": { "type": "STRING" }, "argument_analysis": { "type": "STRING" }, "content_and_evidence": { "type": "STRING" }, "structure_and_flow": { "type": "STRING" } } } }, "conclusion_evaluation": { type: "OBJECT", properties: { "strengths": { "type": "STRING" }, "weaknesses": { "type": "STRING" }, "suggestions": { "type": "STRING" } } }, "overall_feedback": { "type": "STRING" } } }
             },
         };
 
@@ -882,8 +935,53 @@
             ? "The candidate's answer is in the following images."
             : `The candidate's answer is: "${state.answerText}"`;
                 
-        const englishPrompt = `You are my personal UPSC mentor. Your task is to evaluate my Mains answer by comparing it against a provided model answer. Your tone should be human, encouraging, and direct. **Evaluation Task:** 1. **Analyze the Model Answer:** Understand its key points, structure, and depth. This is our benchmark. 2. **Analyze My Answer:** Read through my answer and compare it section-by-section against the model. 3. **Provide Feedback:** Based on this comparison, identify my strengths, weaknesses, and give me actionable suggestions. **Inputs for this Evaluation:** * **Question:** "${state.questionText}" * **Model Answer:** "${state.modelAnswerText}" * **My Answer:** ${answerContentPrompt} * **Maximum Marks:** ${inferredMaxMarks} **Your Feedback Report:** Please provide your evaluation **ONLY** in the following JSON format. Frame your feedback in a conversational and mentor-like tone. **Use markdown bullet points (* or -) within each field to break down your feedback into clear, actionable points.** 1. "score": A score based on how closely my answer matches the model answer's quality. 2. "maxMarks": The maximum marks. 3. "introduction_evaluation": An object with: "strengths", "weaknesses", "suggestions". 4. "body_paragraphs_evaluation": An array of objects, one for each paragraph in my answer. Each object should have: "argument_analysis", "content_and_evidence", "structure_and_flow". 5. "conclusion_evaluation": An object with: "strengths", "weaknesses", "suggestions". 6. "overall_feedback": A summary of the main differences and key takeaways.`;
-        const hindiPrompt = `आप मेरे व्यक्तिगत यूपीएससी मेंटर हैं। आपका कार्य दिए गए मॉडल उत्तर के मुकाबले मेरे मेन्स उत्तर का मूल्यांकन करना है। आपकी भाषा मानवीय, उत्साहजनक और सीधी होनी चाहिए। **मूल्यांकन कार्य:** 1. **मॉडल उत्तर का विश्लेषण करें:** इसके मुख्य बिंदुओं, संरचना और गहराई को समझें। यह हमारा बेंचमार्क है। 2. **मेरे उत्तर का विश्लेषण करें:** मेरे उत्तर को पढ़ें और इसकी तुलना मॉडल से अनुभाग-दर-अनुभाग करें। 3. **प्रतिक्रिया प्रदान करें:** इस तुलना के आधार पर, मेरी ताकत, कमजोरियों की पहचान करें, और मुझे सुधार के लिए कार्रवाई योग्य सुझाव दें। **इस मूल्यांकन के लिए इनपुट:** * **प्रश्न:** "${state.questionText}" * **मॉडल उत्तर:** "${state.modelAnswerText}" * **मेरा उत्तर:** ${answerContentPrompt} * **अधिकतम अंक:** ${inferredMaxMarks} **आपकी फीडबैक रिपोर्ट:** कृपया अपना मूल्यांकन **केवल** निम्नलिखित JSON प्रारूप में प्रदान करें। अपनी प्रतिक्रिया को संवादी और मेंटर जैसी शैली में फ्रेम करें। **प्रत्येक फ़ील्ड के भीतर अपनी प्रतिक्रिया को स्पष्ट, कार्रवाई योग्य बिंदुओं में तोड़ने के लिए मार्कडाउन बुलेट पॉइंट्स (* या -) का उपयोग करें। JSON मान हिंदी में होने चाहिए।** 1. "score": मेरे उत्तर की गुणवत्ता मॉडल उत्तर से कितनी मेल खाती है, उसके आधार पर एक स्कोर। 2. "maxMarks": अधिकतम अंक। 3. "introduction_evaluation": एक ऑब्जेक्ट जिसमें: "strengths", "weaknesses", "suggestions" हों। 4. "body_paragraphs_evaluation": मेरे उत्तर के प्रत्येक पैराग्राफ के लिए ऑब्जेक्ट्स की एक श्रृंखला। प्रत्येक ऑब्जेक्ट में: "argument_analysis", "content_and_evidence", "structure_and_flow" होना चाहिए। 5. "conclusion_evaluation": एक ऑब्जेक्ट जिसमें: "strengths", "weaknesses", "suggestions" हों। 6. "overall_feedback": मुख्य अंतरों और महत्वपूर्ण सीखों का सारांश।`;
+        const englishPrompt = `
+            You are my personal UPSC mentor. Your task is to evaluate my Mains answer by comparing it against a provided model answer. Your tone should be human, encouraging, and direct.
+
+            **Evaluation Task:**
+            1.  **Analyze the Model Answer:** Understand its key points, structure, and depth. This is our benchmark.
+            2.  **Analyze My Answer:** Read through my answer and compare it section-by-section against the model.
+            3.  **Provide Feedback:** Based on this comparison, identify my strengths, weaknesses, and give me actionable suggestions.
+
+            **Inputs for this Evaluation:**
+            * **Question:** "${state.questionText}"
+            * **Model Answer:** "${state.modelAnswerText}"
+            * **My Answer:** ${answerContentPrompt}
+            * **Maximum Marks:** ${inferredMaxMarks}
+
+            **Your Feedback Report:**
+            Please provide your evaluation **ONLY** in the following JSON format. Frame your feedback in a conversational and mentor-like tone. **Use markdown bullet points (* or -) within each field to break down your feedback into clear, actionable points.**
+            1.  "score": A score based on how closely my answer matches the model answer's quality.
+            2.  "maxMarks": The maximum marks.
+            3.  "introduction_evaluation": An object with: "strengths", "weaknesses", "suggestions".
+            4.  "body_paragraphs_evaluation": An array of objects, one for each paragraph/section in my answer. First, deconstruct my answer's body into logical paragraphs or subsections. For each one, create an object with: "paragraph_start" (The first 5-7 words of the paragraph you're evaluating so I can identify it), "argument_analysis", "content_and_evidence", and "structure_and_flow".
+            5.  "conclusion_evaluation": An object with: "strengths", "weaknesses", "suggestions".
+            6.  "overall_feedback": A summary of the main differences and key takeaways.
+        `;
+
+        const hindiPrompt = `
+            आप मेरे व्यक्तिगत यूपीएससी मेंटर हैं। आपका कार्य दिए गए मॉडल उत्तर के मुकाबले मेरे मेन्स उत्तर का मूल्यांकन करना है। आपकी भाषा मानवीय, उत्साहजनक और सीधी होनी चाहिए।
+
+            **मूल्यांकन कार्य:**
+            1.  **मॉडल उत्तर का विश्लेषण करें:** इसके मुख्य बिंदुओं, संरचना और गहराई को समझें। यह हमारा बेंचमार्क है।
+            2.  **मेरे उत्तर का विश्लेषण करें:** मेरे उत्तर को पढ़ें और इसकी तुलना मॉडल से अनुभाग-दर-अनुभाग करें।
+            3.  **प्रतिक्रिया प्रदान करें:** इस तुलना के आधार पर, मेरी ताकत, कमजोरियों की पहचान करें, और मुझे सुधार के लिए कार्रवाई योग्य सुझाव दें।
+
+            **इस मूल्यांकन के लिए इनपुट:**
+            * **प्रश्न:** "${state.questionText}"
+            * **मॉडल उत्तर:** "${state.modelAnswerText}"
+            * **मेरा उत्तर:** ${answerContentPrompt}
+            * **अधिकतम अंक:** ${inferredMaxMarks}
+
+            **आपकी फीडबैक रिपोर्ट:**
+            कृपया अपना मूल्यांकन **केवल** निम्नलिखित JSON प्रारूप में प्रदान करें। अपनी प्रतिक्रिया को संवादी और मेंटर जैसी शैली में फ्रेम करें। **प्रत्येक फ़ील्ड के भीतर अपनी प्रतिक्रिया को स्पष्ट, कार्रवाई योग्य बिंदुओं में तोड़ने के लिए मार्कडाउन बुलेट पॉइंट्स (* या -) का उपयोग करें। JSON मान हिंदी में होने चाहिए।**
+            1. "score": मेरे उत्तर की गुणवत्ता मॉडल उत्तर से कितनी मेल खाती है, उसके आधार पर एक स्कोर।
+            2. "maxMarks": अधिकतम अंक।
+            3. "introduction_evaluation": एक ऑब्जेक्ट जिसमें: "strengths", "weaknesses", "suggestions" हों।
+            4. "body_paragraphs_evaluation": मेरे उत्तर के प्रत्येक पैराग्राफ/खंड के लिए ऑब्जेक्ट्स की एक श्रृंखला। सबसे पहले, मेरे उत्तर के मुख्य भाग को तार्किक पैराग्राफ या उप-भागों में तोड़ें। प्रत्येक के लिए, एक ऑब्जेक्ट बनाएं जिसमें: "paragraph_start" (आपके द्वारा मूल्यांकन किए जा रहे पैराग्राफ के पहले 5-7 शब्द ताकि मैं इसे पहचान सकूं), "argument_analysis", "content_and_evidence", और "structure_and_flow" हों।
+            5. "conclusion_evaluation": एक ऑब्जेक्ट जिसमें: "strengths", "weaknesses", "suggestions" हों।
+            6. "overall_feedback": मुख्य अंतरों और महत्वपूर्ण सीखों का सारांश।
+        `;
 
         const prompt = language === 'hi' ? hindiPrompt : englishPrompt;
         payloadParts.push({ text: prompt });
@@ -903,7 +1001,7 @@
             contents: [{ role: "user", parts: payloadParts }],
             generationConfig: {
                 responseMimeType: "application/json",
-                responseSchema: { type: "OBJECT", properties: { "score": { "type": "NUMBER" }, "maxMarks": { "type": "NUMBER" }, "introduction_evaluation": { type: "OBJECT", properties: { "strengths": { "type": "STRING" }, "weaknesses": { "type": "STRING" }, "suggestions": { "type": "STRING" } } }, "body_paragraphs_evaluation": { type: "ARRAY", items: { type: "OBJECT", properties: { "argument_analysis": { "type": "STRING" }, "content_and_evidence": { "type": "STRING" }, "structure_and_flow": { "type": "STRING" } } } }, "conclusion_evaluation": { type: "OBJECT", properties: { "strengths": { "type": "STRING" }, "weaknesses": { "type": "STRING" }, "suggestions": { "type": "STRING" } } }, "overall_feedback": { "type": "STRING" } } }
+                responseSchema: { type: "OBJECT", properties: { "score": { "type": "NUMBER" }, "maxMarks": { "type": "NUMBER" }, "introduction_evaluation": { type: "OBJECT", properties: { "strengths": { "type": "STRING" }, "weaknesses": { "type": "STRING" }, "suggestions": { "type": "STRING" } } }, "body_paragraphs_evaluation": { type: "ARRAY", items: { type: "OBJECT", properties: { "paragraph_start": { "type": "STRING" }, "argument_analysis": { "type": "STRING" }, "content_and_evidence": { "type": "STRING" }, "structure_and_flow": { "type": "STRING" } } } }, "conclusion_evaluation": { type: "OBJECT", properties: { "strengths": { "type": "STRING" }, "weaknesses": { "type": "STRING" }, "suggestions": { "type": "STRING" } } }, "overall_feedback": { "type": "STRING" } } }
             },
         };
 
