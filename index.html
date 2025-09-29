@@ -4,13 +4,10 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>mAIntor | UPSC Answer Evaluator</title>
-    <!-- Favicon with a simple, modern design -->
     <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Crect width='100' height='100' rx='15' fill='%233b82f6'/%3E%3Ctext x='50' y='75' font-size='90' font-family='Poppins, sans-serif' font-weight='bold' text-anchor='middle' fill='white'%3EA%3C/text%3E%3C/svg%3E">
     
-    <!-- Tailwind CSS for rapid UI development -->
     <script src="https://cdn.tailwindcss.com"></script>
     
-    <!-- Google Fonts for typography -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@700&display=swap" rel="stylesheet">
@@ -151,11 +148,11 @@
             animation: slideUp 0.8s cubic-bezier(0.23, 1, 0.32, 1) forwards;
         }
         /* Staggered animation delays for the main preloader */
-        #preloader .logo-container > span:nth-of-type(1) { animation-delay: 0.2s; } /* m */
-        #preloader .logo-container > span:nth-of-type(4) { animation-delay: 0.8s; } /* n */
-        #preloader .logo-container > span:nth-of-type(5) { animation-delay: 1.0s; } /* t */
-        #preloader .logo-container > span:nth-of-type(6) { animation-delay: 1.2s; } /* o */
-        #preloader .logo-container > span:nth-of-type(7) { animation-delay: 1.4s; } /* r */
+        #preloader .logo-container > span:nth-of-type(1) { animation-delay: 0.2s; }
+        #preloader .logo-container > span:nth-of-type(4) { animation-delay: 0.8s; }
+        #preloader .logo-container > span:nth-of-type(5) { animation-delay: 1.0s; }
+        #preloader .logo-container > span:nth-of-type(6) { animation-delay: 1.2s; }
+        #preloader .logo-container > span:nth-of-type(7) { animation-delay: 1.4s; }
 
         /* Special styling for "AI" */
         .logo-container .ai {
@@ -175,7 +172,6 @@
         .inline-loader span { font-size: 3rem; }
         
         /* --- Evaluation Panel Loader (to match preloader) --- */
-        /* It inherits the main animations. We just need to set the same delays. */
         .inline-loader > span:nth-of-type(1) { animation-delay: 0.2s; }
         .inline-loader > span.ai:nth-of-type(2) { animation-delay: 0.4s, 1.6s; }
         .inline-loader > span.ai:nth-of-type(3) { animation-delay: 0.6s, 1.8s; }
@@ -184,6 +180,10 @@
         .inline-loader > span:nth-of-type(6) { animation-delay: 1.2s; }
         .inline-loader > span:nth-of-type(7) { animation-delay: 1.4s; }
 
+        /* CORRECTED: Loop only the glow animation for the inline loader */
+        .inline-loader span:not(.ai) {
+            animation: slideUp 0.8s cubic-bezier(0.23, 1, 0.32, 1) forwards, pulseGlowBlack 2.2s ease-in-out infinite alternate;
+        }
 
         /* --- Logo Animation Keyframes --- */
         @keyframes slideUp {
@@ -204,29 +204,37 @@
             to { text-shadow: 0 0 12px rgba(51, 51, 51, 0.6); }
         }
 
-        /* --- Responsive Typography for Logo --- */
+        /* --- Responsive Typography & Layout --- */
         @media (max-width: 768px) {
             .logo-container span { font-size: 4rem; }
             .header-logo span { font-size: 1.5rem; }
             .inline-loader span { font-size: 2.5rem; }
         }
         @media (max-width: 480px) {
-            .logo-container span { font-size: 3rem; }
+            .logo-container span { font-size: 3.5rem; } /* Slightly larger for small mobile */
             .header-logo span { font-size: 1.25rem; }
             .inline-loader span { font-size: 2rem; }
+            
+            /* Reduce padding on cards for very small screens */
+            .modern-card {
+                padding: 1rem;
+            }
+            /* Reduce padding on main container for very small screens */
+            main {
+                padding-left: 0.75rem;
+                padding-right: 0.75rem;
+            }
         }
     </style>
 </head>
 
 <body class="text-slate-800">
-    <!-- Preloader Screen -->
     <div id="preloader">
         <div class="logo-container">
             <span>m</span><span class="ai">A</span><span class="ai">I</span><span>n</span><span>t</span><span>o</span><span>r</span>
         </div>
     </div>
 
-    <!-- Main Application Wrapper -->
     <div id="app" class="flex flex-col min-h-screen">
         <header class="bg-white/80 shadow-sm sticky top-0 z-10 backdrop-blur-md border-b border-slate-200">
             <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4 flex justify-between items-center">
@@ -243,7 +251,6 @@
         <main class="max-w-7xl mx-auto p-4 sm:p-6 lg:p-8 flex-grow w-full">
             <div class="grid grid-cols-1 gap-8">
                 
-                <!-- Input Section -->
                 <div class="space-y-6">
                     <div class="modern-card p-4 sm:p-6 rounded-xl shadow-lg fade-in" style="animation-delay: 0.1s;">
                         <h2 class="text-xl font-semibold mb-4 flex items-center gap-3 text-slate-700">
@@ -316,7 +323,6 @@
                     </div>
                 </div>
 
-                <!-- Output Section -->
                 <div>
                     <div class="modern-card p-4 sm:p-6 rounded-xl shadow-lg min-h-[600px] fade-in" style="animation-delay: 0.5s;">
                         <div class="flex justify-between items-start mb-4">
@@ -327,22 +333,20 @@
                             <button id="copy-output-btn" class="hidden flex-shrink-0 items-center gap-2 text-sm font-medium text-slate-600 hover:text-blue-600 transition-all duration-300 transform hover:scale-105 p-2 rounded-lg hover:bg-slate-100">
                                 <svg class="w-4 h-4" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect width="8" height="4" x="8" y="2" rx="1" ry="1"/><path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2"/></svg>
                                 Copy
-                            </button>
+                              </button>
                         </div>
                         <div id="output-container">
-                            <!-- Dynamic content will be rendered here -->
-                        </div>
+                            </div>
                     </div>
                 </div>
             </div>
         </main>
         
         <footer class="text-center py-6 text-sm text-slate-500 border-t border-slate-200 bg-white/50">
-            <p>Created with ❤️ by Poindexter</p>
+            <p>Created with ❤️ by a fellow developer</p>
         </footer>
     </div>
     
-    <!-- Toast Notification Container -->
     <div id="toast-container" class="fixed bottom-4 right-4 z-50 w-full max-w-xs space-y-3"></div>
 
 <script>
@@ -521,8 +525,6 @@
                         if (type === 'question') {
                             app.state.setQuestionText(ocrText);
                         } else if (type === 'modelAnswer') {
-                            // Since modelAnswerEditor is contenteditable, we set its innerHTML
-                            // and update state. A simple sanitizer is used.
                             const sanitizedText = app.utils.sanitizeHtml(ocrText);
                             dom.modelAnswerEditor.innerHTML = sanitizedText;
                             app.state.setModelAnswerText(sanitizedText);
@@ -628,16 +630,16 @@
                     if (!state.questionText.trim() || (!state.answerText.trim() && state.answerFiles.length === 0)) {
                         throw new Error('Please provide a question and an answer.');
                     }
-                    const { prompt, payloadParts } = await this._buildEvaluationPayload('ai');
+                    const { payloadParts } = await this._buildEvaluationPayload('ai');
                     const systemInstruction = { parts: [{ text: "You are a helpful and encouraging UPSC exam mentor. Address the user directly as 'you' and provide constructive, detailed feedback in a conversational tone. Never refer to the user as 'the candidate'." }]};
-                    return await this._callEvaluationApiWithSchema(prompt, systemInstruction, payloadParts);
+                    return await this._callEvaluationApiWithSchema(systemInstruction, payloadParts);
                 },
 
                 async evaluateWithModelAnswer() {
                      if (!state.modelAnswerText.trim()) throw new Error('Please provide the model answer.');
-                     const { prompt, payloadParts } = await this._buildEvaluationPayload('model');
+                     const { payloadParts } = await this._buildEvaluationPayload('model');
                      const systemInstruction = { parts: [{ text: "You are an analytical UPSC exam mentor. Compare the user's answer against the provided model answer meticulously. Address the user directly as 'you' and provide feedback based on the comparison." }]};
-                     return await this._callEvaluationApiWithSchema(prompt, systemInstruction, payloadParts);
+                     return await this._callEvaluationApiWithSchema(systemInstruction, payloadParts);
                 },
 
                 async generateFullModelAnswer() {
@@ -691,10 +693,10 @@
                             payloadParts.push({ inlineData: { mimeType: item.file.type, data: base64Image } });
                         }
                     }
-                    return { prompt, payloadParts };
+                    return { payloadParts };
                 },
 
-                async _callEvaluationApiWithSchema(prompt, systemInstruction, payloadParts) {
+                async _callEvaluationApiWithSchema(systemInstruction, payloadParts) {
                      const payload = {
                          contents: [{ role: "user", parts: payloadParts }],
                          systemInstruction,
@@ -857,15 +859,19 @@
                         </div>`;
                 },
                 _getEvaluationHtml(result) {
-                    const renderSection = (title, data) => `
+                    const renderSection = (title, data) => {
+                        // Check if data exists before rendering the section
+                        if (!data) return '';
+                        return `
                         <div class="bg-slate-50 p-4 rounded-lg">
                             <h4 class="font-semibold text-slate-700 mb-2">${title}</h4>
                             <div class="prose prose-sm max-w-none text-slate-600 space-y-3">
-                                <div><p class="font-semibold text-slate-600">Strengths:</p>${app.utils.renderMarkdown(data?.strengths)}</div>
-                                <div><p class="font-semibold text-slate-600">Weaknesses:</p>${app.utils.renderMarkdown(data?.weaknesses)}</div>
-                                <div><p class="font-semibold text-slate-600">Suggestions for Improvement:</p>${app.utils.renderMarkdown(data?.suggestions)}</div>
+                                <div><p class="font-semibold text-slate-600">Strengths:</p>${app.utils.renderMarkdown(data.strengths)}</div>
+                                <div><p class="font-semibold text-slate-600">Weaknesses:</p>${app.utils.renderMarkdown(data.weaknesses)}</div>
+                                <div><p class="font-semibold text-slate-600">Suggestions for Improvement:</p>${app.utils.renderMarkdown(data.suggestions)}</div>
                             </div>
                         </div>`;
+                    };
 
                     const bodyHtml = (result.body_paragraphs_evaluation || []).map((para, index) => `
                         <div class="pt-4">
@@ -952,7 +958,6 @@
                     });
                 },
                 // Basic HTML sanitizer to prevent XSS from pasted content in contenteditable.
-                // For a real app, a more robust library like DOMPurify would be better.
                 sanitizeHtml(htmlString) {
                     const tempDiv = document.createElement('div');
                     tempDiv.textContent = htmlString;
@@ -962,8 +967,6 @@
                     if (!dom.outputContainer || !dom.outputContainer.innerText.trim()) return;
                     
                     const textToCopy = dom.outputContainer.innerText;
-                    // Using a temporary textarea is a robust way to copy text,
-                    // especially in environments that might restrict the newer Clipboard API.
                     const textArea = document.createElement('textarea');
                     textArea.value = textToCopy;
                     document.body.appendChild(textArea);
@@ -979,43 +982,37 @@
                 },
                 /**
                  * A simple but effective Markdown to HTML renderer.
-                 * Supports headings, bold, italics, and nested lists.
                  */
                 renderMarkdown(markdownText) {
-                    if (!markdownText) return '';
+                     if (!markdownText) return '';
                     
                     const lines = markdownText.trim().split('\n');
                     let html = '';
                     let inList = false;
 
                     for (const line of lines) {
-                        const trimmedLine = line.trim();
-
-                        // Process block elements
-                        if (trimmedLine.startsWith('## ')) {
+                        let processedLine = line.trim();
+                        // This handles inline formatting first
+                        processedLine = processedLine
+                            .replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')
+                            .replace(/\*(.*?)\*/g, '<em>$1</em>');
+                        
+                        if (processedLine.startsWith('## ')) {
                             if (inList) { html += '</ul>'; inList = false; }
-                            html += `<h2 class="text-xl font-bold mt-6 mb-3 text-slate-800">${trimmedLine.substring(3)}</h2>`;
-                        } else if (trimmedLine.startsWith('### ')) {
+                            html += `<h2 class="text-xl font-bold mt-6 mb-3 text-slate-800">${processedLine.substring(3)}</h2>`;
+                        } else if (processedLine.startsWith('### ')) {
                             if (inList) { html += '</ul>'; inList = false; }
-                            html += `<h3 class="text-lg font-semibold mt-4 mb-2 text-slate-700">${trimmedLine.substring(4)}</h3>`;
-                        } else if (trimmedLine.startsWith('* ') || trimmedLine.startsWith('- ')) {
+                            html += `<h3 class="text-lg font-semibold mt-4 mb-2 text-slate-700">${processedLine.substring(4)}</h3>`;
+                        } else if (processedLine.startsWith('* ') || processedLine.startsWith('- ')) {
                             if (!inList) {
                                 html += '<ul class="list-disc pl-5 space-y-1">';
                                 inList = true;
                             }
-                            // Process inline elements within the list item
-                            const itemContent = trimmedLine.substring(2)
-                                .replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')
-                                .replace(/\*(.*?)\*/g, '<em>$1</em>');
-                            html += `<li>${itemContent}</li>`;
-                        } else if (trimmedLine.length > 0) {
+                            html += `<li>${processedLine.substring(2)}</li>`;
+                        } else if (processedLine.length > 0) {
                             if (inList) { html += '</ul>'; inList = false; }
-                            // Process inline elements within the paragraph
-                            const paragraphContent = trimmedLine
-                                .replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')
-                                .replace(/\*(.*?)\*/g, '<em>$1</em>');
-                            html += `<p>${paragraphContent}</p>`;
-                        } else { // Empty line
+                            html += `<p class="leading-relaxed">${processedLine}</p>`;
+                        } else {
                             if (inList) { html += '</ul>'; inList = false; }
                         }
                     }
