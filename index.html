@@ -4,13 +4,10 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>mAIntor | UPSC Answer Evaluator</title>
-    <!-- Favicon with a simple, modern design -->
     <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Crect width='100' height='100' rx='15' fill='%233b82f6'/%3E%3Ctext x='50' y='75' font-size='90' font-family='Poppins, sans-serif' font-weight='bold' text-anchor='middle' fill='white'%3EA%3C/text%3E%3C/svg%3E">
     
-    <!-- Tailwind CSS for rapid UI development -->
     <script src="https://cdn.tailwindcss.com"></script>
     
-    <!-- Google Fonts for typography -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@700&display=swap" rel="stylesheet">
@@ -175,26 +172,16 @@
         .inline-loader span { font-size: 3rem; }
         
         /* --- Evaluation Panel Loader (to match preloader) --- */
-        /* It inherits the main animations. We just need to set the same delays. */
-        .inline-loader > span:nth-of-type(1) { animation-delay: 0.2s; }
+        .inline-loader > span:not(.ai) {
+             animation: slideUp 0.8s cubic-bezier(0.23, 1, 0.32, 1) forwards, pulseGlowBlack 2.2s ease-in-out infinite alternate;
+        }
+        .inline-loader > span:nth-of-type(1) { animation-delay: 0.2s, 0.2s; }
         .inline-loader > span.ai:nth-of-type(2) { animation-delay: 0.4s, 1.6s; }
         .inline-loader > span.ai:nth-of-type(3) { animation-delay: 0.6s, 1.8s; }
-        .inline-loader > span:nth-of-type(4) { animation-delay: 0.8s; }
-        .inline-loader > span:nth-of-type(5) { animation-delay: 1.0s; }
-        .inline-loader > span:nth-of-type(6) { animation-delay: 1.2s; }
-        .inline-loader > span:nth-of-type(7) { animation-delay: 1.4s; }
-
-        /* --- Infinite loop for inline loader --- */
-        .inline-loader span {
-            animation-iteration-count: infinite;
-            animation-direction: alternate;
-        }
-        .inline-loader .ai {
-            /* The first animation (aiReveal) is made infinite. The second (pulseGlow) is already infinite. */
-            animation-iteration-count: infinite, infinite;
-            animation-direction: alternate, alternate;
-        }
-
+        .inline-loader > span:nth-of-type(4) { animation-delay: 0.8s, 0.8s; }
+        .inline-loader > span:nth-of-type(5) { animation-delay: 1.0s, 1.0s; }
+        .inline-loader > span:nth-of-type(6) { animation-delay: 1.2s, 1.2s; }
+        .inline-loader > span:nth-of-type(7) { animation-delay: 1.4s, 1.4s; }
 
         /* --- Logo Animation Keyframes --- */
         @keyframes slideUp {
@@ -230,14 +217,12 @@
 </head>
 
 <body class="text-slate-800">
-    <!-- Preloader Screen -->
     <div id="preloader">
         <div class="logo-container">
             <span>m</span><span class="ai">A</span><span class="ai">I</span><span>n</span><span>t</span><span>o</span><span>r</span>
         </div>
     </div>
 
-    <!-- Main Application Wrapper -->
     <div id="app" class="flex flex-col min-h-screen">
         <header class="bg-white/80 shadow-sm sticky top-0 z-10 backdrop-blur-md border-b border-slate-200">
             <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4 flex justify-between items-center">
@@ -254,7 +239,6 @@
         <main class="max-w-7xl mx-auto p-4 sm:p-6 lg:p-8 flex-grow w-full">
             <div class="grid grid-cols-1 gap-8">
                 
-                <!-- Input Section -->
                 <div class="space-y-6">
                     <div class="modern-card p-4 sm:p-6 rounded-xl shadow-lg fade-in" style="animation-delay: 0.1s;">
                         <h2 class="text-xl font-semibold mb-4 flex items-center gap-3 text-slate-700">
@@ -327,7 +311,6 @@
                     </div>
                 </div>
 
-                <!-- Output Section -->
                 <div>
                     <div class="modern-card p-4 sm:p-6 rounded-xl shadow-lg min-h-[600px] fade-in" style="animation-delay: 0.5s;">
                         <div class="flex justify-between items-start mb-4">
@@ -338,11 +321,10 @@
                             <button id="copy-output-btn" class="hidden flex-shrink-0 items-center gap-2 text-sm font-medium text-slate-600 hover:text-blue-600 transition-all duration-300 transform hover:scale-105 p-2 rounded-lg hover:bg-slate-100">
                                 <svg class="w-4 h-4" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect width="8" height="4" x="8" y="2" rx="1" ry="1"/><path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2"/></svg>
                                 Copy
-                            </button>
+                              </button>
                         </div>
                         <div id="output-container">
-                            <!-- Dynamic content will be rendered here -->
-                        </div>
+                            </div>
                     </div>
                 </div>
             </div>
@@ -353,7 +335,6 @@
         </footer>
     </div>
     
-    <!-- Toast Notification Container -->
     <div id="toast-container" class="fixed bottom-4 right-4 z-50 w-full max-w-xs space-y-3"></div>
 
 <script>
@@ -362,15 +343,13 @@
     (function() {
         /**
          * IMPORTANT: SECURITY & API USAGE
-         * This application is now configured to use a backend proxy.
-         * All API calls are sent to the `PROXY_API_URL` endpoint.
-         * Your backend server at that endpoint is responsible for securely attaching the API key
-         * and forwarding the request to the Google AI API.
+         * This application is configured to use a backend proxy. The 404 error indicates that
+         * your development server is not correctly proxying requests from '/api/proxy' to the Google AI API.
+         * Ensure your backend server is running and configured to handle this URL.
          */
-        const PROXY_API_URL = '/api/proxy'; // The proxy endpoint from the original code.
+        const PROXY_API_URL = '/api/proxy';
 
         // --- 1. STATE MANAGEMENT ---
-        // A single source of truth for the application's state.
         const state = {
             questionText: '',
             answerText: '',
@@ -389,11 +368,9 @@
         };
 
         // --- 2. DOM ELEMENT CACHE ---
-        // Caching DOM elements for performance.
         const dom = {};
 
         // --- 3. CORE APPLICATION LOGIC (app object) ---
-        // Modularizing the code into logical units.
         const app = {
             /**
              * Initializes the application, caches DOM elements, and sets up event listeners.
@@ -457,7 +434,6 @@
             },
 
             // --- 3a. State Mutations ---
-            // Centralized functions for updating state to ensure consistency.
             state: {
                 setLoading(key, value) {
                     state.loading[key] = value;
@@ -532,8 +508,6 @@
                         if (type === 'question') {
                             app.state.setQuestionText(ocrText);
                         } else if (type === 'modelAnswer') {
-                            // Since modelAnswerEditor is contenteditable, we set its innerHTML
-                            // and update state. A simple sanitizer is used.
                             const sanitizedText = app.utils.sanitizeHtml(ocrText);
                             dom.modelAnswerEditor.innerHTML = sanitizedText;
                             app.state.setModelAnswerText(sanitizedText);
@@ -639,16 +613,16 @@
                     if (!state.questionText.trim() || (!state.answerText.trim() && state.answerFiles.length === 0)) {
                         throw new Error('Please provide a question and an answer.');
                     }
-                    const { prompt, payloadParts } = await this._buildEvaluationPayload('ai');
+                    const { payloadParts } = await this._buildEvaluationPayload('ai');
                     const systemInstruction = { parts: [{ text: "You are a helpful and encouraging UPSC exam mentor. Address the user directly as 'you' and provide constructive, detailed feedback in a conversational tone. Never refer to the user as 'the candidate'." }]};
-                    return await this._callEvaluationApiWithSchema(prompt, systemInstruction, payloadParts);
+                    return await this._callEvaluationApiWithSchema(systemInstruction, payloadParts);
                 },
 
                 async evaluateWithModelAnswer() {
                      if (!state.modelAnswerText.trim()) throw new Error('Please provide the model answer.');
-                     const { prompt, payloadParts } = await this._buildEvaluationPayload('model');
+                     const { payloadParts } = await this._buildEvaluationPayload('model');
                      const systemInstruction = { parts: [{ text: "You are an analytical UPSC exam mentor. Compare the user's answer against the provided model answer meticulously. Address the user directly as 'you' and provide feedback based on the comparison." }]};
-                     return await this._callEvaluationApiWithSchema(prompt, systemInstruction, payloadParts);
+                     return await this._callEvaluationApiWithSchema(systemInstruction, payloadParts);
                 },
 
                 async generateFullModelAnswer() {
@@ -673,7 +647,7 @@
                     const { inferredMaxMarks } = app.utils.getInferredLimits(state.questionText);
                     const language = app.utils.detectLanguage(state.questionText);
                     const isHindi = language === 'hi';
-
+                    
                     let scoringInstruction = '';
                     if (inferredMaxMarks === 15) {
                         scoringInstruction = isHindi
@@ -712,10 +686,10 @@
                             payloadParts.push({ inlineData: { mimeType: item.file.type, data: base64Image } });
                         }
                     }
-                    return { prompt, payloadParts };
-                },,
+                    return { payloadParts };
+                },
 
-                async _callEvaluationApiWithSchema(prompt, systemInstruction, payloadParts) {
+                async _callEvaluationApiWithSchema(systemInstruction, payloadParts) {
                      const payload = {
                          contents: [{ role: "user", parts: payloadParts }],
                          systemInstruction,
@@ -799,7 +773,7 @@
                         const fileDiv = document.createElement('div');
                         fileDiv.className = "flex items-center justify-between bg-slate-100 p-2 rounded-md text-sm";
                         fileDiv.innerHTML = `
-                            <span class="truncate">${item.file.name}</span>
+                            <span class="truncate">${app.utils.sanitizeHtml(item.file.name)}</span>
                             <button data-file-id="${item.id}" class="remove-file-btn text-slate-500 hover:text-red-600 p-1 transition-colors">
                                 <svg class="w-4 h-4" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6h18"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6"/><path d="M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/><line x1="10" y1="11" y2="17"/><line x1="14" y1="11" y2="17"/></svg>
                             </button>
@@ -973,7 +947,6 @@
                     });
                 },
                 // Basic HTML sanitizer to prevent XSS from pasted content in contenteditable.
-                // For a real app, a more robust library like DOMPurify would be better.
                 sanitizeHtml(htmlString) {
                     const tempDiv = document.createElement('div');
                     tempDiv.textContent = htmlString;
@@ -983,8 +956,6 @@
                     if (!dom.outputContainer || !dom.outputContainer.innerText.trim()) return;
                     
                     const textToCopy = dom.outputContainer.innerText;
-                    // Using a temporary textarea is a robust way to copy text,
-                    // especially in environments that might restrict the newer Clipboard API.
                     const textArea = document.createElement('textarea');
                     textArea.value = textToCopy;
                     document.body.appendChild(textArea);
@@ -1000,7 +971,6 @@
                 },
                 /**
                  * A simple but effective Markdown to HTML renderer.
-                 * Supports headings, bold, italics, and nested lists.
                  */
                 renderMarkdown(markdownText) {
                     if (!markdownText) return '';
