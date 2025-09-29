@@ -673,8 +673,8 @@
                         modelAnswer: evalType === 'model' ? (isHindi ? `मॉडल उत्तर: "${state.modelAnswerText}"` : `Model Answer: "${state.modelAnswerText}"`) : '',
                         maxMarks: isHindi ? `अधिकतम अंक: ${inferredMaxMarks}` : `Maximum Marks: ${inferredMaxMarks}`,
                         instruction: isHindi 
-                            ? "कृपया अपनी प्रतिक्रिया **केवल** JSON प्रारूप में प्रदान करें। सभी फ़ीडबैक फ़ील्ड में संवादात्मक, मेंटर जैसी टोन का उपयोग करें। प्रतिक्रिया के लिए मार्कडाउन बुलेट पॉइंट (* या -) का उपयोग करें।"
-                            : "Please provide your response **ONLY** in JSON format. Use a conversational, mentor-like tone in all feedback fields. Use markdown bullet points (* or -) for feedback."
+                            ? "कृपया अपनी प्रतिक्रिया **केवल** JSON प्रारूप में प्रदान करें। यह महत्वपूर्ण है कि आप दिए गए उत्तर का सावधानीपूर्वक विश्लेषण करें, उत्तर के मुख्य भाग में पहचाने गए **प्रत्येक अलग पैराग्राफ या उपखंड** के लिए 'body_paragraphs_evaluation' ऐरे में एक अलग मूल्यांकन ऑब्जेक्ट बनाएं। पैराग्राफ को मिलाएं या छोड़ें नहीं। सभी फ़ीडबैक फ़ील्ड में संवादात्मक, मेंटर जैसी टोन का उपयोग करें। प्रतिक्रिया के लिए मार्कडाउन बुलेट पॉइंट (* या -) का उपयोग करें।"
+                            : "Please provide your response **ONLY** in JSON format. It is crucial that you meticulously analyze the entire answer provided, creating a separate evaluation object in the 'body_paragraphs_evaluation' array for **each distinct paragraph or subsection** you identify in the answer's body. Do not merge or skip paragraphs. Use a conversational, mentor-like tone in all feedback fields. Use markdown bullet points (* or -) for feedback."
                     };
 
                     const prompt = `${promptTemplate.question}\n${promptTemplate.answer}\n${promptTemplate.modelAnswer}\n${promptTemplate.maxMarks}\n\n${promptTemplate.instruction}`;
@@ -691,17 +691,17 @@
 
                 async _callEvaluationApiWithSchema(prompt, systemInstruction, payloadParts) {
                      const payload = {
-                        contents: [{ role: "user", parts: payloadParts }],
-                        systemInstruction,
-                        generationConfig: {
-                            responseMimeType: "application/json",
-                            responseSchema: { type: "OBJECT", properties: { "score": { "type": "NUMBER" }, "maxMarks": { "type": "NUMBER" }, "introduction_evaluation": { type: "OBJECT", properties: { "strengths": { "type": "STRING" }, "weaknesses": { "type": "STRING" }, "suggestions": { "type": "STRING" } } }, "body_paragraphs_evaluation": { type: "ARRAY", items: { type: "OBJECT", properties: { "paragraph_start": { "type": "STRING" }, "strengths": { "type": "STRING" }, "weaknesses": { "type": "STRING" }, "suggestions_for_improvement": { "type": "STRING" } } } }, "conclusion_evaluation": { type: "OBJECT", properties: { "strengths": { "type": "STRING" }, "weaknesses": { "type": "STRING" }, "suggestions": { "type": "STRING" } } }, "overall_feedback": { "type": "STRING" } } }
-                        },
-                    };
-                    const result = await this._fetchFromProxy({ mode: 'evaluate', payload: payload });
-                    const jsonText = result.candidates?.[0]?.content?.parts?.[0]?.text;
-                    if (!jsonText) return null;
-                    return JSON.parse(jsonText);
+                         contents: [{ role: "user", parts: payloadParts }],
+                         systemInstruction,
+                         generationConfig: {
+                             responseMimeType: "application/json",
+                             responseSchema: { type: "OBJECT", properties: { "score": { "type": "NUMBER" }, "maxMarks": { "type": "NUMBER" }, "introduction_evaluation": { type: "OBJECT", properties: { "strengths": { "type": "STRING" }, "weaknesses": { "type": "STRING" }, "suggestions": { "type": "STRING" } } }, "body_paragraphs_evaluation": { type: "ARRAY", items: { type: "OBJECT", properties: { "paragraph_start": { "type": "STRING" }, "strengths": { "type": "STRING" }, "weaknesses": { "type": "STRING" }, "suggestions_for_improvement": { "type": "STRING" } } } }, "conclusion_evaluation": { type: "OBJECT", properties: { "strengths": { "type": "STRING" }, "weaknesses": { "type": "STRING" }, "suggestions": { "type": "STRING" } } }, "overall_feedback": { "type": "STRING" } } }
+                         },
+                     };
+                     const result = await this._fetchFromProxy({ mode: 'evaluate', payload: payload });
+                     const jsonText = result.candidates?.[0]?.content?.parts?.[0]?.text;
+                     if (!jsonText) return null;
+                     return JSON.parse(jsonText);
                 },
 
                 async _fetchFromProxy(body, retries = 3) {
@@ -1022,4 +1022,3 @@
 
 </body>
 </html>
-
