@@ -150,12 +150,12 @@
             opacity: 0;
             animation: slideUp 0.8s cubic-bezier(0.23, 1, 0.32, 1) forwards;
         }
-        /* Staggered animation delays */
-        .logo-container > span:nth-of-type(1) { animation-delay: 0.2s; } /* m */
-        .logo-container > span:nth-of-type(4) { animation-delay: 0.8s; } /* n */
-        .logo-container > span:nth-of-type(5) { animation-delay: 1.0s; } /* t */
-        .logo-container > span:nth-of-type(6) { animation-delay: 1.2s; } /* o */
-        .logo-container > span:nth-of-type(7) { animation-delay: 1.4s; } /* r */
+        /* Staggered animation delays for the main preloader */
+        #preloader .logo-container > span:nth-of-type(1) { animation-delay: 0.2s; } /* m */
+        #preloader .logo-container > span:nth-of-type(4) { animation-delay: 0.8s; } /* n */
+        #preloader .logo-container > span:nth-of-type(5) { animation-delay: 1.0s; } /* t */
+        #preloader .logo-container > span:nth-of-type(6) { animation-delay: 1.2s; } /* o */
+        #preloader .logo-container > span:nth-of-type(7) { animation-delay: 1.4s; } /* r */
 
         /* Special styling for "AI" */
         .logo-container .ai {
@@ -167,39 +167,22 @@
             background-size: 0% 100%;
             background-repeat: no-repeat;
         }
-        .logo-container > span.ai:nth-of-type(2) { animation-delay: 0.4s, 1.6s; }
-        .logo-container > span.ai:nth-of-type(3) { animation-delay: 0.6s, 1.8s; }
+        #preloader .logo-container > span.ai:nth-of-type(2) { animation-delay: 0.4s, 1.6s; }
+        #preloader .logo-container > span.ai:nth-of-type(3) { animation-delay: 0.6s, 1.8s; }
 
         /* --- Logo Size Overrides for different contexts --- */
         .header-logo span { font-size: 1.75rem; }
         .inline-loader span { font-size: 3rem; }
         
-        /* Looping animation for the inline evaluation loader */
-        .inline-loader span:not(.ai) {
-             animation: slideUp 0.8s cubic-bezier(0.23, 1, 0.32, 1) forwards, pulseGlowBlack 2.2s ease-in-out infinite alternate;
-        }
-
-        /* --- INFINITE LOOPING animation for the evaluation panel loader --- */
-        .inline-loader span {
-            opacity: 1 !important; /* Override opacity:0 to make looping visible */
-        }
-        .inline-loader span:not(.ai) {
-             /* The non-AI letters now loop their slideUp animation, matching the preloader's style without the extra glow */
-             animation: slideUp 0.8s cubic-bezier(0.23, 1, 0.32, 1) infinite alternate;
-        }
-        .inline-loader span.ai {
-            /* The AI letters loop their reveal and glow, matching the preloader's animation style */
-            animation: aiReveal 1.2s cubic-bezier(0.23, 1, 0.32, 1) infinite alternate, pulseGlow 2s ease-in-out infinite alternate;
-        }
-
-        /* Stagger the looping animation for a wave effect */
-        .inline-loader > span:nth-of-type(1) { animation-delay: 0s; }
-        .inline-loader > span:nth-of-type(2) { animation-delay: 0.1s, 0.1s; }
-        .inline-loader > span:nth-of-type(3) { animation-delay: 0.2s, 0.2s; }
-        .inline-loader > span:nth-of-type(4) { animation-delay: 0.3s; }
-        .inline-loader > span:nth-of-type(5) { animation-delay: 0.4s; }
-        .inline-loader > span:nth-of-type(6) { animation-delay: 0.5s; }
-        .inline-loader > span:nth-of-type(7) { animation-delay: 0.6s; }
+        /* --- Evaluation Panel Loader (to match preloader) --- */
+        /* It inherits the main animations. We just need to set the same delays. */
+        .inline-loader > span:nth-of-type(1) { animation-delay: 0.2s; }
+        .inline-loader > span.ai:nth-of-type(2) { animation-delay: 0.4s, 1.6s; }
+        .inline-loader > span.ai:nth-of-type(3) { animation-delay: 0.6s, 1.8s; }
+        .inline-loader > span:nth-of-type(4) { animation-delay: 0.8s; }
+        .inline-loader > span:nth-of-type(5) { animation-delay: 1.0s; }
+        .inline-loader > span:nth-of-type(6) { animation-delay: 1.2s; }
+        .inline-loader > span:nth-of-type(7) { animation-delay: 1.4s; }
 
 
         /* --- Logo Animation Keyframes --- */
@@ -1039,6 +1022,4 @@
 
 </body>
 </html>
-
-
 
