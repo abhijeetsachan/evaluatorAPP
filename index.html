@@ -187,10 +187,12 @@
         /* --- Infinite loop for inline loader --- */
         .inline-loader span {
             animation-iteration-count: infinite;
+            animation-direction: alternate;
         }
         .inline-loader .ai {
             /* The first animation (aiReveal) is made infinite. The second (pulseGlow) is already infinite. */
             animation-iteration-count: infinite, infinite;
+            animation-direction: alternate, alternate;
         }
 
 
@@ -671,6 +673,21 @@
                     const { inferredMaxMarks } = app.utils.getInferredLimits(state.questionText);
                     const language = app.utils.detectLanguage(state.questionText);
                     const isHindi = language === 'hi';
+
+                    let scoringInstruction = '';
+                    if (inferredMaxMarks === 15) {
+                        scoringInstruction = isHindi
+                            ? "15 अंकों के प्रश्न के लिए, सामान्य उत्तर के लिए 6-7 अंक दें। यदि उत्तर बहुत अच्छा है, तो 7-9 अंक दें।"
+                            : "For a 15-marker question, award 6-7 marks for a standard answer. If the answer is very good, award 7-9 marks.";
+                    } else { // Defaulting to 10 marks
+                        scoringInstruction = isHindi
+                            ? "10 अंकों के प्रश्न के लिए, सामान्य उत्तर के लिए लगभग 4 अंक दें। यदि उत्तर वास्तव में अच्छा है, तो 5-6 अंक दें।"
+                            : "For a 10-marker question, award around 4 marks for a standard answer. If the answer is genuinely good, award 5-6 marks.";
+                    }
+
+                    const diagramBonusInstruction = isHindi
+                        ? "यदि उत्तर में प्रासंगिक चित्र या फ़्लोचार्ट का उपयोग किया गया है, तो स्कोर को 10-15% तक बढ़ाएँ।"
+                        : "If relevant diagrams or flowcharts have been used in the answer, increase the score by 10-15%.";
                     
                     let answerContentPrompt = state.answerFiles.length > 0
                         ? (isHindi ? "मेरा उत्तर निम्नलिखित छवियों में है। कृपया इन छवियों से सीधे हस्तलिखित पाठ और किसी भी आरेख का विश्लेषण करें।" : "My answer is in the following images. Please analyze the handwritten text and any diagrams directly from these images.")
@@ -682,8 +699,8 @@
                         modelAnswer: evalType === 'model' ? (isHindi ? `मॉडल उत्तर: "${state.modelAnswerText}"` : `Model Answer: "${state.modelAnswerText}"`) : '',
                         maxMarks: isHindi ? `अधिकतम अंक: ${inferredMaxMarks}` : `Maximum Marks: ${inferredMaxMarks}`,
                         instruction: isHindi 
-                            ? "कृपया अपनी प्रतिक्रिया **केवल** JSON प्रारूप में प्रदान करें। यह महत्वपूर्ण है कि आप दिए गए उत्तर का सावधानीपूर्वक विश्लेषण करें, उत्तर के मुख्य भाग में पहचाने गए **प्रत्येक अलग पैराग्राफ या उपखंड** के लिए 'body_paragraphs_evaluation' ऐरे में एक अलग मूल्यांकन ऑब्जेक्ट बनाएं। पैराग्राफ को मिलाएं या छोड़ें नहीं। सभी फ़ीडबैक फ़ील्ड में संवादात्मक, मेंटर जैसी टोन का उपयोग करें। प्रतिक्रिया के लिए मार्कडाउन बुलेट पॉइंट (* या -) का उपयोग करें।"
-                            : "Please provide your response **ONLY** in JSON format. It is crucial that you meticulously analyze the entire answer provided, creating a separate evaluation object in the 'body_paragraphs_evaluation' array for **each distinct paragraph or subsection** you identify in the answer's body. Do not merge or skip paragraphs. Use a conversational, mentor-like tone in all feedback fields. Use markdown bullet points (* or -) for feedback."
+                            ? `कृपया अपनी प्रतिक्रिया **केवल** JSON प्रारूप में प्रदान करें। ${scoringInstruction} ${diagramBonusInstruction} यह महत्वपूर्ण है कि आप दिए गए उत्तर का सावधानीपूर्वक विश्लेषण करें, उत्तर के मुख्य भाग में पहचाने गए **प्रत्येक अलग पैराग्राफ या उपखंड** के लिए 'body_paragraphs_evaluation' ऐरे में एक अलग मूल्यांकन ऑब्जेक्ट बनाएं। पैराग्राफ को मिलाएं या छोड़ें नहीं। सभी फ़ीडबैक फ़ील्ड में संवादात्मक, मेंटर जैसी टोन का उपयोग करें। प्रतिक्रिया के लिए मार्कडाउन बुलेट पॉइंट (* या -) का उपयोग करें।`
+                            : `Please provide your response **ONLY** in JSON format. ${scoringInstruction} ${diagramBonusInstruction} It is crucial that you meticulously analyze the entire answer provided, creating a separate evaluation object in the 'body_paragraphs_evaluation' array for **each distinct paragraph or subsection** you identify in the answer's body. Do not merge or skip paragraphs. Use a conversational, mentor-like tone in all feedback fields. Use markdown bullet points (* or -) for feedback.`
                     };
 
                     const prompt = `${promptTemplate.question}\n${promptTemplate.answer}\n${promptTemplate.modelAnswer}\n${promptTemplate.maxMarks}\n\n${promptTemplate.instruction}`;
@@ -696,7 +713,7 @@
                         }
                     }
                     return { prompt, payloadParts };
-                },
+                },,
 
                 async _callEvaluationApiWithSchema(prompt, systemInstruction, payloadParts) {
                      const payload = {
