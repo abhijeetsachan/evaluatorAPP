@@ -4,13 +4,10 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>mAIntor | UPSC Answer Evaluator</title>
-    <!-- Favicon with a simple, modern design -->
     <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Crect width='100' height='100' rx='15' fill='%233b82f6'/%3E%3Ctext x='50' y='75' font-size='90' font-family='Poppins, sans-serif' font-weight='bold' text-anchor='middle' fill='white'%3EA%3C/text%3E%3C/svg%3E">
     
-    <!-- Tailwind CSS for rapid UI development -->
     <script src="https://cdn.tailwindcss.com"></script>
     
-    <!-- Google Fonts for typography -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@700&display=swap" rel="stylesheet">
@@ -28,11 +25,22 @@
         }
 
         /* --- Allow Text Selection in specific areas --- */
-        #output-container, [contenteditable="true"], textarea {
+        #output-container, [contenteditable="true"], textarea, pre, code {
             -webkit-user-select: text; /* Re-enable for outputs and inputs */
             -moz-user-select: text;
             -ms-user-select: text;
             user-select: text;
+        }
+
+        /* --- Styling for Code Blocks (for diagrams) --- */
+        .prose pre {
+            background-color: #f1f5f9; /* slate-100 */
+            color: #334155; /* slate-700 */
+            padding: 1rem;
+            border-radius: 0.5rem;
+            border: 1px solid #e2e8f0; /* slate-200 */
+            white-space: pre-wrap;
+            word-wrap: break-word;
         }
 
         /* --- General Animations --- */
@@ -219,14 +227,12 @@
 </head>
 
 <body class="text-slate-800">
-    <!-- Preloader Screen -->
     <div id="preloader">
         <div class="logo-container">
             <span>m</span><span class="ai">A</span><span class="ai">I</span><span>n</span><span>t</span><span>o</span><span>r</span>
         </div>
     </div>
 
-    <!-- Main Application Wrapper -->
     <div id="app" class="flex flex-col min-h-screen">
         <header class="bg-white/80 shadow-sm sticky top-0 z-10 backdrop-blur-md border-b border-slate-200">
             <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4 flex justify-between items-center">
@@ -243,7 +249,6 @@
         <main class="max-w-7xl mx-auto p-4 sm:p-6 lg:p-8 flex-grow w-full">
             <div class="grid grid-cols-1 gap-8">
                 
-                <!-- Input Section -->
                 <div class="space-y-6">
                     <div class="modern-card p-4 sm:p-6 rounded-xl shadow-lg fade-in" style="animation-delay: 0.1s;">
                         <h2 class="text-xl font-semibold mb-4 flex items-center gap-3 text-slate-700">
@@ -316,7 +321,6 @@
                     </div>
                 </div>
 
-                <!-- Output Section -->
                 <div>
                     <div class="modern-card p-4 sm:p-6 rounded-xl shadow-lg min-h-[600px] fade-in" style="animation-delay: 0.5s;">
                         <div class="flex justify-between items-start mb-4">
@@ -330,8 +334,7 @@
                             </button>
                         </div>
                         <div id="output-container">
-                            <!-- Dynamic content will be rendered here -->
-                        </div>
+                            </div>
                     </div>
                 </div>
             </div>
@@ -342,7 +345,6 @@
         </footer>
     </div>
     
-    <!-- Toast Notification Container -->
     <div id="toast-container" class="fixed bottom-4 right-4 z-50 w-full max-w-xs space-y-3"></div>
 
 <script>
@@ -647,7 +649,7 @@
                     const isHindi = language === 'hi';
                     
                     const targetWordCount = (inferredWordLimit === '150 words') ? (isHindi ? '४५०-५०० शब्दों' : '450-500 words') : (isHindi ? '६५०-७०० शब्दों' : '650-700 words');
-                    const prompt = `Write a comprehensive, well-structured model answer for the following UPSC question. This answer is for a detailed study resource, so it should be more in-depth than a standard exam answer, targeting a word count of ${targetWordCount}. Structure the answer with a clear Introduction, Body, and Conclusion. Use Markdown for formatting: '##' for main headings, '###' for subheadings, and bullet points ('* ' or '- ') for lists. The content must be accurate, relevant, and cover all aspects of the question in detail. The tone should be formal and academic. The question is: "${state.questionText}"`;
+                    const prompt = `Write a comprehensive, well-structured model answer for the following UPSC question. This answer is for a detailed study resource, so it should be more in-depth than a standard exam answer, targeting a word count of ${targetWordCount}. Structure the answer with a clear Introduction, Body, and Conclusion. Use Markdown for formatting: '##' for main headings, '###' for subheadings, and bullet points ('* ' or '- '). **Throughout the body of the answer, incorporate simple text-based arrow diagrams or flowcharts (using characters like ->, |, etc.) where they can help explain processes, timelines, or relationships. Please wrap these diagrams in Markdown code blocks (\`\`\`) for clear formatting.** The content must be accurate, relevant, and cover all aspects of the question in detail. The tone should be formal and academic. The question is: "${state.questionText}"`;
 
                     const systemInstruction = { parts: [{ text: `You are a UPSC subject matter expert creating a detailed study resource in ${isHindi ? 'Hindi' : 'English'}.` }]};
                     const payload = { contents: [{ role: "user", parts: [{ text: prompt }] }], systemInstruction };
@@ -678,8 +680,8 @@
                         modelAnswer: evalType === 'model' ? (isHindi ? `मॉडल उत्तर: "${modelAnswerPlainText}"` : `Model Answer: "${modelAnswerPlainText}"`) : '',
                         maxMarks: isHindi ? `अधिकतम अंक: ${inferredMaxMarks}` : `Maximum Marks: ${inferredMaxMarks}`,
                         instruction: isHindi 
-                            ? "कृपया अपनी प्रतिक्रिया **केवल** JSON प्रारूप में प्रदान करें। यह महत्वपूर्ण है कि आप दिए गए उत्तर का सावधानीपूर्वक विश्लेषण करें, उत्तर के मुख्य भाग में पहचाने गए **प्रत्येक अलग पैराग्राफ या उपखंड** के लिए 'body_paragraphs_evaluation' ऐरे में एक अलग मूल्यांकन ऑब्जेक्ट बनाएं। पैराग्राफ को मिलाएं या छोड़ें नहीं। सभी फ़ीडबैक फ़ील्ड में संवादात्मक, मेंटर जैसी टोन का उपयोग करें। प्रतिक्रिया के लिए मार्कडाउन बुलेट पॉइंट (* या -) का उपयोग करें।"
-                            : "Please provide your response **ONLY** in JSON format. It is crucial that you meticulously analyze the entire answer provided, creating a separate evaluation object in the 'body_paragraphs_evaluation' array for **each distinct paragraph or subsection** you identify in the answer's body. Do not merge or skip paragraphs. Use a conversational, mentor-like tone in all feedback fields. Use markdown bullet points (* or -) for feedback."
+                            ? "कृपया अपनी प्रतिक्रिया **केवल** JSON प्रारूप में प्रदान करें। यह महत्वपूर्ण है कि आप दिए गए उत्तर का सावधानीपूर्वक विश्लेषण करें। **अपने 'suggestions' और 'suggestions_for_improvement' फ़ील्ड में, जहाँ भी किसी प्रक्रिया या प्रवाह को स्पष्ट किया जा सकता है, अपनी बात को स्पष्ट करने के लिए एक सरल टेक्स्ट-आधारित तीर आरेख (जैसे, `अवधारणा A -> अवधारणा B`) प्रदान करें।** सभी फ़ीडबैक फ़ील्ड में संवादात्मक, मेंटर जैसी टोन का उपयोग करें।"
+                            : "Please provide your response **ONLY** in JSON format. It is crucial that you meticulously analyze the entire answer provided. **In your 'suggestions' and 'suggestions_for_improvement' fields, wherever a process or flow can be clarified, provide a simple text-based arrow diagram (e.g., `Concept A -> Concept B`) to illustrate your point.** Use a conversational, mentor-like tone in all feedback fields. Use markdown bullet points (* or -) for feedback."
                     };
 
                     const prompt = `${promptTemplate.question}\n${promptTemplate.answer}\n${promptTemplate.modelAnswer}\n${promptTemplate.maxMarks}\n\n${promptTemplate.instruction}`;
@@ -696,12 +698,12 @@
 
                 async _callEvaluationApiWithSchema(prompt, systemInstruction, payloadParts) {
                      const payload = {
-                         contents: [{ role: "user", parts: payloadParts }],
-                         systemInstruction,
-                         generationConfig: {
-                             responseMimeType: "application/json",
-                             responseSchema: { type: "OBJECT", properties: { "score": { "type": "NUMBER" }, "maxMarks": { "type": "NUMBER" }, "introduction_evaluation": { type: "OBJECT", properties: { "strengths": { "type": "STRING" }, "weaknesses": { "type": "STRING" }, "suggestions": { "type": "STRING" } } }, "body_paragraphs_evaluation": { type: "ARRAY", items: { type: "OBJECT", properties: { "paragraph_start": { "type": "STRING" }, "strengths": { "type": "STRING" }, "weaknesses": { "type": "STRING" }, "suggestions_for_improvement": { "type": "STRING" } } } }, "conclusion_evaluation": { type: "OBJECT", properties: { "strengths": { "type": "STRING" }, "weaknesses": { "type": "STRING" }, "suggestions": { "type": "STRING" } } }, "overall_feedback": { "type": "STRING" } } }
-                         },
+                          contents: [{ role: "user", parts: payloadParts }],
+                          systemInstruction,
+                          generationConfig: {
+                              responseMimeType: "application/json",
+                              responseSchema: { type: "OBJECT", properties: { "score": { "type": "NUMBER" }, "maxMarks": { "type": "NUMBER" }, "introduction_evaluation": { type: "OBJECT", properties: { "strengths": { "type": "STRING" }, "weaknesses": { "type": "STRING" }, "suggestions": { "type": "STRING" } } }, "body_paragraphs_evaluation": { type: "ARRAY", items: { type: "OBJECT", properties: { "paragraph_start": { "type": "STRING" }, "strengths": { "type": "STRING" }, "weaknesses": { "type": "STRING" }, "suggestions_for_improvement": { "type": "STRING" } } } }, "conclusion_evaluation": { type: "OBJECT", properties: { "strengths": { "type": "STRING" }, "weaknesses": { "type": "STRING" }, "suggestions": { "type": "STRING" } } }, "overall_feedback": { "type": "STRING" } } }
+                          },
                      };
                      const result = await this._fetchFromProxy({ mode: 'evaluate', payload: payload });
                      const jsonText = result.candidates?.[0]?.content?.parts?.[0]?.text;
@@ -978,50 +980,61 @@
                     document.body.removeChild(textArea);
                 },
                 /**
-                 * A simple but effective Markdown to HTML renderer.
-                 * Supports headings, bold, italics, and nested lists.
+                 * An improved Markdown to HTML renderer.
+                 * Supports headings, bold, italics, lists, and code blocks for diagrams.
                  */
                 renderMarkdown(markdownText) {
                     if (!markdownText) return '';
-                    
-                    const lines = markdownText.trim().split('\n');
-                    let html = '';
+
+                    // Sanitize to prevent HTML injection, but keep line breaks for processing
+                    const sanitizedText = markdownText.replace(/</g, "&lt;").replace(/>/g, "&gt;");
+
+                    let html = sanitizedText
+                        // Process code blocks first to prevent inner markdown from rendering
+                        .replace(/```([\s\S]*?)```/g, (match, code) => `<pre><code>${code.trim()}</code></pre>`)
+                        // Process headings
+                        .replace(/^## (.*$)/g, '<h2 class="text-xl font-bold mt-6 mb-3 text-slate-800">$1</h2>')
+                        .replace(/^### (.*$)/g, '<h3 class="text-lg font-semibold mt-4 mb-2 text-slate-700">$1</h3>')
+                        // Process bold and italics
+                        .replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')
+                        .replace(/\*(.*?)\*/g, '<em>$1</em>');
+
+                    // Process list items line-by-line
+                    const lines = html.split('\n');
                     let inList = false;
+                    html = '';
 
                     for (const line of lines) {
-                        const trimmedLine = line.trim();
+                        if (line.trim().startsWith('&lt;pre&gt;')) {
+                            if (inList) { html += '</ul>\n'; inList = false; }
+                             html += line + '\n';
+                             continue;
+                        }
 
-                        // Process block elements
-                        if (trimmedLine.startsWith('## ')) {
-                            if (inList) { html += '</ul>'; inList = false; }
-                            html += `<h2 class="text-xl font-bold mt-6 mb-3 text-slate-800">${trimmedLine.substring(3)}</h2>`;
-                        } else if (trimmedLine.startsWith('### ')) {
-                            if (inList) { html += '</ul>'; inList = false; }
-                            html += `<h3 class="text-lg font-semibold mt-4 mb-2 text-slate-700">${trimmedLine.substring(4)}</h3>`;
-                        } else if (trimmedLine.startsWith('* ') || trimmedLine.startsWith('- ')) {
+                        const trimmedLine = line.trim();
+                        if (trimmedLine.startsWith('- ') || trimmedLine.startsWith('* ')) {
                             if (!inList) {
-                                html += '<ul class="list-disc pl-5 space-y-1">';
+                                html += '<ul class="list-disc pl-5 space-y-1">\n';
                                 inList = true;
                             }
-                            // Process inline elements within the list item
-                            const itemContent = trimmedLine.substring(2)
-                                .replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')
-                                .replace(/\*(.*?)\*/g, '<em>$1</em>');
-                            html += `<li>${itemContent}</li>`;
-                        } else if (trimmedLine.length > 0) {
-                            if (inList) { html += '</ul>'; inList = false; }
-                            // Process inline elements within the paragraph
-                            const paragraphContent = trimmedLine
-                                .replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')
-                                .replace(/\*(.*?)\*/g, '<em>$1</em>');
-                            html += `<p>${paragraphContent}</p>`;
-                        } else { // Empty line
-                            if (inList) { html += '</ul>'; inList = false; }
+                            html += `  <li>${trimmedLine.substring(2)}</li>\n`;
+                        } else {
+                            if (inList) {
+                                html += '</ul>\n';
+                                inList = false;
+                            }
+                             if (trimmedLine) {
+                                // Don't wrap headings or existing blocks in <p>
+                                if (!trimmedLine.startsWith('<h') && !trimmedLine.startsWith('<pre>')) {
+                                     html += `<p>${trimmedLine}</p>\n`;
+                                } else {
+                                     html += trimmedLine + '\n';
+                                }
+                            }
                         }
                     }
-
                     if (inList) {
-                        html += '</ul>';
+                        html += '</ul>\n';
                     }
 
                     return html;
